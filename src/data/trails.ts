@@ -54,4 +54,24 @@ export const TRAILS: Trail[] = [
     description:
       "A crisp ascent through cloud shadows, finishing with a wide-open summit view.",
   },
+  {
+  id: "shamakhi",
+  name: "Shamakhi",
+  region: "Shamakhi, Demirchi village",
+  distanceKm: 6.5,
+  durationHours: 3.5,
+  difficulty: "Moderate",
+  elevationM: 400,
+  description: "Add your description here",
+},
+{
+  id: "gurgur",
+  name: "Gurgur Waterfall",
+  region: "Quba, Griz",
+  distanceKm: 3.5,
+  durationHours: 2,
+  difficulty: "Easy",
+  elevationM: 250,
+  description: "Add your description here",
+},
 ];

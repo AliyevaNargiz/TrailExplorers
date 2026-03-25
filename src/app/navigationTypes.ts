@@ -3,7 +3,8 @@ export type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Main: undefined;
-  TrailDetail: { id: string } | undefined;
+  TrailDetail: { id: string } ;
+  AllTrails: undefined;
 };
 
 export type MainTabParamList = {

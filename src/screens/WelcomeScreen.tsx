@@ -18,7 +18,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
           <Pressable
             style={styles.button}
-            onPress={() => navigation.replace("Main")}
+            onPress={() => navigation.navigate("Login")}
           >
             <View style={styles.iconCircle}>
               <Text style={styles.googleG}>G</Text>

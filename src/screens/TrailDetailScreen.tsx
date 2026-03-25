@@ -1,36 +1,82 @@
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Pressable, Image, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
 import { COLORS } from "../theme/colors";
-import { TRAILS } from "../data/trails";
+import type { Trail } from "../data/trails";
+import { fetchTrailById } from "../services/trailsService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TrailDetail">;
 
 export default function TrailDetailScreen({ navigation, route }: Props) {
-  const trail = TRAILS.find((item) => item.id === route.params?.id) ?? TRAILS[0];
+  const trailId = route.params?.id;
+  // console.log("✅ TrailDetail received id:", trailId);
+  console.log("Opening trail id:", trailId);
+  Alert.alert("Trail ID", String(trailId));
+  const [trail, setTrail] = useState<Trail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!trailId) {
+        setLoading(false);
+        Alert.alert("Error", "Missing trail id");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const t = await fetchTrailById(trailId);
+        // if (!t) {
+        //   Alert.alert("Not found", "This trail does not exist in the database.");
+        //   navigation.goBack();
+        //   return;
+        // }
+        if (!t) {
+  setTrail(null);
+  setLoading(false);
+  return;
+}
+        setTrail(t);
+      } catch (e: any) {
+        console.log(e);
+        Alert.alert("Error", e?.message ?? "Failed to load trail");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [trailId]);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 10 }}>Loading trail...</Text>
+      </View>
+    );
+  }
+
+  if (!trail) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <Text>Trail not found.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Image
-            source={require("../../assets/menu.png")}
-            style={styles.iconImage}
-          />
+          <Image source={require("../../assets/menu.png")} style={styles.iconImage} />
         </Pressable>
+
         <View style={styles.topIcons}>
-          <Image
-            source={require("../../assets/icon-circle.png")}
-            style={styles.iconImage}
-          />
-          <Image
-            source={require("../../assets/icon-plus.png")}
-            style={styles.iconImage}
-          />
-          <Image
-            source={require("../../assets/icon-search.png")}
-            style={styles.iconImage}
-          />
+          <Image source={require("../../assets/icon-circle.png")} style={styles.iconImage} />
+          <Image source={require("../../assets/icon-plus.png")} style={styles.iconImage} />
+          <Image source={require("../../assets/icon-search.png")} style={styles.iconImage} />
         </View>
       </View>
 
@@ -47,19 +93,10 @@ export default function TrailDetailScreen({ navigation, route }: Props) {
       </View>
 
       <View style={styles.galleryRow}>
-        <Image
-          source={require("../../assets/qaranohur.png")}
-          style={styles.galleryLarge}
-        />
+        <Image source={require("../../assets/qaranohur.png")} style={styles.galleryLarge} />
         <View style={styles.galleryCol}>
-          <Image
-            source={require("../../assets/shamakhi.png")}
-            style={styles.gallerySmall}
-          />
-          <Image
-            source={require("../../assets/gurgur.png")}
-            style={styles.gallerySmall}
-          />
+          <Image source={require("../../assets/shamakhi.png")} style={styles.gallerySmall} />
+          <Image source={require("../../assets/gurgur.png")} style={styles.gallerySmall} />
         </View>
       </View>
 
@@ -72,19 +109,14 @@ export default function TrailDetailScreen({ navigation, route }: Props) {
       </View>
 
       <View style={styles.metricsRow}>
-        <Text style={styles.metricPill}>⏱ 4 hours of hike</Text>
-        <Text style={styles.metricPill}>📍 7 km</Text>
-        <Text style={styles.metricPill}>⛰ Hard</Text>
+        <Text style={styles.metricPill}>⏱ {trail.durationHours} hours of hike</Text>
+        <Text style={styles.metricPill}>📍 {trail.distanceKm} km</Text>
+        <Text style={styles.metricPill}>⛰ {trail.difficulty}</Text>
         <Text style={styles.metricPill}>🗺 Offline map available</Text>
       </View>
 
       <Text style={styles.sectionTitle}>Overview</Text>
-      <Text style={styles.description}>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat.
-      </Text>
+      <Text style={styles.description}>{trail.description}</Text>
 
       <Text style={styles.sectionTitle}>Reviews by other travelers</Text>
       <View style={styles.reviewRow}>
@@ -96,9 +128,7 @@ export default function TrailDetailScreen({ navigation, route }: Props) {
           <View key={review.name} style={styles.reviewCard}>
             <Image source={review.image} style={styles.reviewAvatar} />
             <Text style={styles.reviewName}>{review.name}</Text>
-            <Text style={styles.reviewText}>
-              “Some guidance or short feedback.”
-            </Text>
+            <Text style={styles.reviewText}>“Some guidance or short feedback.”</Text>
           </View>
         ))}
       </View>
@@ -117,7 +147,6 @@ export default function TrailDetailScreen({ navigation, route }: Props) {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -137,10 +166,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
-  },
-  backText: {
-    fontSize: 16,
-    color: COLORS.black,
   },
   topIcons: {
     flexDirection: "row",

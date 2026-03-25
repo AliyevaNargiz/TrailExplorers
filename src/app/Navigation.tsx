@@ -5,12 +5,15 @@ import { Image } from "react-native";
 
 import SplashScreen from "../screens/SplashScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
+import LoginScreen from "../screens/LoginScreen";
 import HomeScreen from "../screens/HomeScreen";
 import EcoChallengesScreen from "../screens/EcoChallengesScreen";
 import FriendsScreen from "../screens/FriendsScreen";
+import Main from "../screens/Main";
 import FindTrailScreen from "../screens/FindTrailScreen";
 import TrailDetailScreen from "../screens/TrailDetailScreen";
 import { MainTabParamList, RootStackParamList } from "./navigationTypes";
+import AllTrailsScreen from "../screens/AllTrailsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -109,8 +112,11 @@ export default function Navigation() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="AllTrails" component={AllTrailsScreen} />
         <Stack.Screen name="TrailDetail" component={TrailDetailScreen} />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

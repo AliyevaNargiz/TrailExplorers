@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -5,44 +6,39 @@ import {
   FlatList,
   Pressable,
   Image,
+  ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
 import { CompositeScreenProps } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+
 import { MainTabParamList, RootStackParamList } from "../app/navigationTypes";
 import { COLORS } from "../theme/colors";
+import type { Trail } from "../data/trails";
+import { fetchTrails } from "../services/trailsService";
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, "Home">,
   NativeStackScreenProps<RootStackParamList>
 >;
 
+// Local images by Firestore doc id.
+// (Later you can store imageUrl in Firestore and use it instead.)
+const trailImages: Record<string, any> = {
+  qaranohur: require("../../assets/qaranohur.png"),
+  shamakhi: require("../../assets/shamakhi.png"),
+  gurgur: require("../../assets/gurgur.png"),
+  goygol: require("../../assets/qaranohur.png"), // fallback
+  lahic: require("../../assets/shamakhi.png"),   // fallback
+  tufandag: require("../../assets/gurgur.png"),  // fallback
+};
+
 export default function HomeScreen({ navigation }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const discoverCards = [
-    {
-      id: "qaranohur",
-      name: "Qaranohur",
-      distance: "2.5 km away",
-      rating: "4.3",
-      image: require("../../assets/qaranohur.png"),
-    },
-    {
-      id: "shamakhi",
-      name: "Shamakhi",
-      distance: "6.5 km away",
-      rating: "4.2",
-      image: require("../../assets/shamakhi.png"),
-    },
-    {
-      id: "gurgur",
-      name: "Gurgur Waterfall",
-      distance: "3.5 km away",
-      rating: "4.4",
-      image: require("../../assets/gurgur.png"),
-    },
-  ];
+
+  const [trails, setTrails] = useState<Trail[]>([]);
+  const [loadingTrails, setLoadingTrails] = useState(true);
+
   const progressItems = [
     "2.5 km total hike completed",
     "Completed 5 different trails",
@@ -50,6 +46,29 @@ export default function HomeScreen({ navigation }: Props) {
     "Added 2 new trail for exploration",
     "“Qobustan” trail in progress",
   ];
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingTrails(true);
+        const data = await fetchTrails();
+
+        // Optional: stable ordering (so it doesn't shuffle)
+        const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
+        setTrails(sorted);
+      } catch (e) {
+        console.log(e);
+        setTrails([]);
+      } finally {
+        setLoadingTrails(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  // show only first 3 trails in the Home section
+  const discoverCards = useMemo(() => trails.slice(0, 3), [trails]);
 
   return (
     <View style={styles.container}>
@@ -94,32 +113,54 @@ export default function HomeScreen({ navigation }: Props) {
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionTitle}>DISCOVER NEW TRAILS</Text>
-          <Text style={styles.sectionSubtitle}>Recommended specially for you</Text>
+          <Text style={styles.sectionSubtitle}>
+            Recommended specially for you
+          </Text>
         </View>
-        <Text style={styles.viewAll}>view all</Text>
+
+        <Pressable onPress={() => navigation.navigate("Main")}>
+          <Text style={styles.viewAll}>view all</Text>
+        </Pressable>
       </View>
 
-      <FlatList
-        data={discoverCards}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.trailList}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.trailCard}
-            onPress={() => navigation.navigate("TrailDetail", { id: item.id })}
-          >
-            <Image source={item.image} style={styles.trailImage} />
-            <Text style={styles.trailName}>{item.name}</Text>
-            <Text style={styles.trailMeta}>
-              <Text style={styles.trailDot}>● </Text>
-              {item.distance}   <Text style={styles.trailStar}>★</Text>{" "}
-              {item.rating}
+      {loadingTrails ? (
+        <View style={{ paddingVertical: 16 }}>
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <FlatList
+          data={discoverCards}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.trailList}
+          renderItem={({ item }) => (
+            <Pressable
+              style={styles.trailCard}
+              onPress={() => navigation.navigate("TrailDetail", { id: item.id })}
+            >
+              <Image
+                source={
+                  trailImages[item.id] ?? require("../../assets/qaranohur.png")
+                }
+                style={styles.trailImage}
+              />
+              <Text style={styles.trailName}>{item.name}</Text>
+
+              <Text style={styles.trailMeta}>
+                <Text style={styles.trailDot}>● </Text>
+                {item.region}{" "}
+                <Text style={styles.trailStar}>★</Text> 4.3
+              </Text>
+            </Pressable>
+          )}
+          ListEmptyComponent={
+            <Text style={{ color: COLORS.grayText, fontSize: 12 }}>
+              No trails found in Firestore.
             </Text>
-          </Pressable>
-        )}
-      />
+          }
+        />
+      )}
 
       <View style={styles.sectionHeader}>
         <View>
@@ -130,6 +171,9 @@ export default function HomeScreen({ navigation }: Props) {
           </Text>
         </View>
         <Text style={styles.viewAll}>view all</Text>
+        <Pressable onPress={() => navigation.navigate("AllTrails")}>
+        <Text style={styles.viewAll}>view all</Text>
+        </Pressable>
       </View>
 
       <View style={styles.guidesRow}>
@@ -147,22 +191,13 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
             {[
               { label: "Personal Profile" },
-              {
-                label: "History",
-                icon: require("../../assets/history.png"),
-              },
-              {
-                label: "Settings",
-                icon: require("../../assets/setting 1.png"),
-              },
+              { label: "History", icon: require("../../assets/history.png") },
+              { label: "Settings", icon: require("../../assets/setting 1.png") },
               {
                 label: "Notifications",
                 icon: require("../../assets/notification-bell 1.png"),
               },
-              {
-                label: "Log out",
-                icon: require("../../assets/logout 1.png"),
-              },
+              { label: "Log out", icon: require("../../assets/logout 1.png") },
             ].map((item) => (
               <View key={item.label} style={styles.menuRow}>
                 {item.icon ? (
