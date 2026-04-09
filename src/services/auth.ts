@@ -318,6 +318,7 @@ import * as Google from "expo-auth-session/providers/google";
 import { GoogleAuthProvider, signInWithCredential, signOut } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import * as AuthSession from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -340,17 +341,26 @@ function requireEnv(name: string): string {
 export function useGoogleSignIn() {
   const iosClientId = requireEnv("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID");
   const webClientId = requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID");
+  const androidClientId = requireEnv("EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID");
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    iosClientId,
-    webClientId,
-    scopes: ["openid", "profile", "email"],
-  } as any);
+const redirectUri = AuthSession.makeRedirectUri({
+  /* Do not put useProxy here */
+  scheme: "trailexplorers",
+});
 
-  const signIn = async () => {
-    const res = await promptAsync(); // ✅ no proxy in dev build
+ const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+  // IMPORTANT: For Expo Go, Google often prefers the WEB Client ID
+  clientId: webClientId, 
+  iosClientId: iosClientId,
+  androidClientId: androidClientId,
+  redirectUri,
+});
 
-    if (res.type !== "success") {
+ const signIn = async () => {
+  // res will now open in a standard system browser
+  const res = await promptAsync(); 
+
+  if (res.type !== "success") {
       throw new Error(`Google sign-in failed: ${res.type}`);
     }
 

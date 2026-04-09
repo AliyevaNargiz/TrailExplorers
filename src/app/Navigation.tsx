@@ -14,6 +14,11 @@ import FindTrailScreen from "../screens/FindTrailScreen";
 import TrailDetailScreen from "../screens/TrailDetailScreen";
 import { MainTabParamList, RootStackParamList } from "./navigationTypes";
 import AllTrailsScreen from "../screens/AllTrailsScreen";
+import OfflineMapScreen from "../screens/OfflineMapScreen";
+// import TrailMap from "../screens/TrailMap";
+import AddNewTrailBasicScreen from "../screens/AddNewTrailBasicScreen";
+import AddNewTrailMediaScreen from "../screens/AddNewTrailMediaScreen";
+import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -116,7 +121,11 @@ export default function Navigation() {
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen name="AllTrails" component={AllTrailsScreen} />
         <Stack.Screen name="TrailDetail" component={TrailDetailScreen} />
+        <Stack.Screen name="OfflineMap" component={OfflineMapScreen} />
         
+        <Stack.Screen name="AddNewTrailBasic" component={AddNewTrailBasicScreen} />
+        <Stack.Screen name="AddNewTrailMedia" component={AddNewTrailMediaScreen} />
+        <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
