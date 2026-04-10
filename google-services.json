@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "286057375578",
+    "project_id": "trailexplorers-cc935",
+    "storage_bucket": "trailexplorers-cc935.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:286057375578:android:c42244bd829af9ae0e3563",
+        "android_client_info": {
+          "package_name": "com.gunelllll.trailexplorers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "286057375578-5dmp4k6otfahb91c14mq0juvs9bqh2iq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gunelllll.trailexplorers",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "286057375578-q9i9h9iqujr6l7ct5flrh8t4h0c1k05q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0905dea4MRoB5AyQRYcBhQf54jORz2Ww"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "286057375578-q9i9h9iqujr6l7ct5flrh8t4h0c1k05q.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "286057375578-76liluki67a516ic4up3ftmov10f4087.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gunelllll.trailexplorers"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -17,13 +17,14 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.gunelllll.trailexplorers",
+      googleServicesFile: "./GoogleService-Info.plist",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
       package: "com.gunelllll.trailexplorers",
-      googleServicesFile: "./android/app/google-services.json",
+      googleServicesFile: "./google-services.json",
       permissions: [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -50,6 +51,7 @@ export default {
             "com.googleusercontent.apps.286057375578-76liluki67a516ic4up3ftmov10f4087",
         },
       ],
+      "expo-web-browser",
     ],
   },
 };
