@@ -312,15 +312,231 @@
 
 //   return { request, response, signIn, logout };
 // }
+//
+// import { useEffect } from "react";
+// import * as WebBrowser from "expo-web-browser";
+// import * as Google from "expo-auth-session/providers/google";
+// import { GoogleAuthProvider, signInWithCredential, signOut } from "firebase/auth";
+// import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+// import { auth, db } from "./firebase";
+// import * as AuthSession from "expo-auth-session";
+//
+// WebBrowser.maybeCompleteAuthSession();
+//
+// type UserProfileDoc = {
+//   name: string;
+//   email: string;
+//   photoURL: string;
+//   provider: "google";
+//   role: "user";
+//   createdAt?: any;
+//   lastLoginAt?: any;
+// };
+//
+// function requireEnv(name: string): string {
+//   const val = process.env[name];
+//   if (!val || val.trim().length === 0) throw new Error(`Missing env ${name}`);
+//   return val;
+// }
+//
+// export function useGoogleSignIn() {
+//   const iosClientId = requireEnv("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID");
+//   const webClientId = requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID");
+//   const androidClientId = requireEnv("EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID");
+//
+// const redirectUri = AuthSession.makeRedirectUri({
+//   /* Do not put useProxy here */
+//   scheme: "trailexplorers",
+// });
+//
+// useEffect(() => {
+//     if (__DEV__) {
+//       console.log(
+//         "[Google OAuth] Add this exact redirect URI under the Web OAuth client → Authorized redirect URIs:",
+//         redirectUri
+//       );
+//     }
+//   }, [redirectUri]);
+//
+//  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+//   // IMPORTANT: For Expo Go, Google often prefers the WEB Client ID
+//   webClientId,
+//   iosClientId,
+//   androidClientId,
+//   redirectUri,
+// });
+//
+//  const signIn = async () => {
+//   // res will now open in a standard system browser
+//   const res = await promptAsync();
+//
+//   if (res.type !== "success") {
+//       throw new Error(`Google sign-in failed: ${res.type}`);
+//     }
+//
+//     const idToken = res.params?.id_token;
+//     if (!idToken) throw new Error("Missing id_token");
+//
+//     const credential = GoogleAuthProvider.credential(idToken);
+//     const userCred = await signInWithCredential(auth, credential);
+//     const user = userCred.user;
 
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
+// const proxyRedirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
+//
+// const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+//   clientId: webClientId,
+//   redirectUri: proxyRedirectUri,
+//   scopes: ["openid", "profile", "email"],
+// } as any);
+//
+// const signIn = async () => {
+//   const res = await (promptAsync as any)({ useProxy: true });
+//
+//   if (res.type !== "success") {
+//     throw new Error(`Google sign-in failed: ${res.type}`);
+//   }
+//
+//   const idToken = res.params?.id_token;
+//   if (!idToken) throw new Error("Missing id_token");
+//
+//   const credential = GoogleAuthProvider.credential(idToken);
+//   const userCred = await signInWithCredential(auth, credential);
+//   return userCred.user;
+// };
+//
+//     const ref = doc(db, "users", user.uid);
+//     const snap = await getDoc(ref);
+//
+//     if (!snap.exists()) {
+//       const docData: UserProfileDoc = {
+//         name: user.displayName ?? "",
+//         email: user.email ?? "",
+//         photoURL: user.photoURL ?? "",
+//         provider: "google",
+//         role: "user",
+//         createdAt: serverTimestamp(),
+//         lastLoginAt: serverTimestamp(),
+//       };
+//       await setDoc(ref, docData);
+//     } else {
+//       await updateDoc(ref, {
+//         name: user.displayName ?? "",
+//         photoURL: user.photoURL ?? "",
+//         lastLoginAt: serverTimestamp(),
+//       });
+//     }
+//
+//     return user;
+//   };
+//
+//   const logout = async () => {
+//     await signOut(auth);
+//   };
+//
+//   return { request, response, signIn, logout };
+// }
+
+// import * as WebBrowser from "expo-web-browser";
+// import * as AuthSession from "expo-auth-session";
+// import * as Google from "expo-auth-session/providers/google";
+// import { GoogleAuthProvider, signInWithCredential, signOut } from "firebase/auth";
+// import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+// import { auth, db } from "./firebase";
+
+// WebBrowser.maybeCompleteAuthSession();
+
+// type UserProfileDoc = {
+//   name: string;
+//   email: string;
+//   photoURL: string;
+//   provider: "google";
+//   role: "user";
+//   createdAt?: any;
+//   lastLoginAt?: any;
+// };
+
+// function requireEnv(name: string): string {
+//   const val = process.env[name];
+//   if (!val || val.trim().length === 0 || val.includes("xxxxx")) {
+//     throw new Error(
+//       `Missing env ${name}. Put your Google OAuth WEB client id in .env as ${name}=xxxxx.apps.googleusercontent.com`
+//     );
+//   }
+//   return val;
+// }
+
+// export function useGoogleSignIn() {
+//   // Expo Go/browser-proxy flow: use the WEB client ID
+//   const webClientId = requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID");
+
+//   // Use Expo proxy redirect for Expo Go
+//   const redirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
+
+//   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+//     clientId: webClientId,
+//     redirectUri,
+//     scopes: ["openid", "profile", "email"],
+//   } as any);
+
+//   const signIn = async () => {
+//     const res = await (promptAsync as any)({ useProxy: true });
+
+//     if (res.type !== "success") {
+//       const details =
+//         res?.params?.error_description ||
+//         res?.params?.error ||
+//         res?.error?.message ||
+//         `Google sign-in cancelled/failed: ${res?.type}`;
+//       throw new Error(details);
+//     }
+
+//     const idToken: string | undefined = res?.params?.id_token;
+//     if (!idToken) {
+//       throw new Error("Google sign-in failed: missing id_token");
+//     }
+
+//     const credential = GoogleAuthProvider.credential(idToken);
+//     const userCred = await signInWithCredential(auth, credential);
+//     const user = userCred.user;
+
+//     const ref = doc(db, "users", user.uid);
+//     const snap = await getDoc(ref);
+
+//     if (!snap.exists()) {
+//       const docData: UserProfileDoc = {
+//         name: user.displayName ?? "",
+//         email: user.email ?? "",
+//         photoURL: user.photoURL ?? "",
+//         provider: "google",
+//         role: "user",
+//         createdAt: serverTimestamp(),
+//         lastLoginAt: serverTimestamp(),
+//       };
+
+//       await setDoc(ref, docData);
+//     } else {
+//       await updateDoc(ref, {
+//         name: user.displayName ?? "",
+//         photoURL: user.photoURL ?? "",
+//         lastLoginAt: serverTimestamp(),
+//       });
+//     }
+
+//     return user;
+//   };
+
+//   const logout = async () => {
+//     await signOut(auth);
+//   };
+
+//   return { request, response, signIn, logout };
+// }
+
+
+import { GoogleSignin, isSuccessResponse } from "@react-native-google-signin/google-signin";
 import { GoogleAuthProvider, signInWithCredential, signOut } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import * as AuthSession from "expo-auth-session";
-
-WebBrowser.maybeCompleteAuthSession();
 
 type UserProfileDoc = {
   name: string;
@@ -334,38 +550,36 @@ type UserProfileDoc = {
 
 function requireEnv(name: string): string {
   const val = process.env[name];
-  if (!val || val.trim().length === 0) throw new Error(`Missing env ${name}`);
+  if (!val || val.trim().length === 0 || val.includes("xxxxx")) {
+    throw new Error(`Missing env ${name}`);
+  }
   return val;
 }
 
+console.log("CLIENT ID:", process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+
+GoogleSignin.configure({
+  webClientId: requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"),
+  iosClientId: requireEnv("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID"),
+  offlineAccess: true,
+});
+
 export function useGoogleSignIn() {
-  const iosClientId = requireEnv("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID");
-  const webClientId = requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID");
-  const androidClientId = requireEnv("EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID");
+  const request = true;
 
-const redirectUri = AuthSession.makeRedirectUri({
-  /* Do not put useProxy here */
-  scheme: "trailexplorers",
-});
+  const signIn = async () => {
+    await GoogleSignin.hasPlayServices();
 
- const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-  // IMPORTANT: For Expo Go, Google often prefers the WEB Client ID
-  clientId: webClientId, 
-  iosClientId: iosClientId,
-  androidClientId: androidClientId,
-  redirectUri,
-});
+    const result = await GoogleSignin.signIn();
 
- const signIn = async () => {
-  // res will now open in a standard system browser
-  const res = await promptAsync(); 
-
-  if (res.type !== "success") {
-      throw new Error(`Google sign-in failed: ${res.type}`);
+    if (!isSuccessResponse(result)) {
+      throw new Error("Google sign-in was cancelled");
     }
 
-    const idToken = res.params?.id_token;
-    if (!idToken) throw new Error("Missing id_token");
+    const idToken = result.data.idToken;
+    if (!idToken) {
+      throw new Error("Google sign-in failed: missing idToken");
+    }
 
     const credential = GoogleAuthProvider.credential(idToken);
     const userCred = await signInWithCredential(auth, credential);
@@ -397,8 +611,9 @@ const redirectUri = AuthSession.makeRedirectUri({
   };
 
   const logout = async () => {
+    await GoogleSignin.signOut();
     await signOut(auth);
   };
 
-  return { request, response, signIn, logout };
+  return { request, response: null, signIn, logout };
 }

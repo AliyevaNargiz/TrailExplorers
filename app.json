@@ -22,32 +22,32 @@
       }
     },
     "android": {
-  "package": "com.gunelllll.trailexplorers",
-  "permissions": [
-    "ACCESS_FINE_LOCATION",
-    "ACCESS_COARSE_LOCATION"
-  ],
-  "config": {
-    "googleMaps": {
-      "apiKey": "AIzaSyD9qxgBobrzyLmly557bIGzDyKgXswVVLU"
-    }
-  }
-  },
-  "web": {
-    "favicon": "./assets/favicon.png"
-  },
-  "extra": {
-    "eas": {
-      "projectId": "987d5279-5830-45be-8a44-5adc0e6a49a0"
-    }
-  },
-  "plugins": [
-    [
-      "@react-native-google-signin/google-signin",
-      {
-        "iosUrlScheme": "com.googleusercontent.apps.286057375578-76liluki67a516ic4up3ftmov10f4087"
+      "package": "com.gunelllll.trailexplorers",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD9qxgBobrzyLmly557bIGzDyKgXswVVLU"
+        }
       }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "987d5279-5830-45be-8a44-5adc0e6a49a0"
+      }
+    },
+    "plugins": [
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.286057375578-76liluki67a516ic4up3ftmov10f4087"
+        }
+      ]
     ]
-  ]
-}
+  }
 }
