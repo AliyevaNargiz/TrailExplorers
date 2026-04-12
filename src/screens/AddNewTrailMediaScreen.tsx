@@ -14,12 +14,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 import { submitTrailSubmission } from "../services/trailSubmissionService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddNewTrailMedia">;
 
 export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
   const { draft } = route.params;
   const [waypointNotes, setWaypointNotes] = useState("");
   const [distanceKm, setDistanceKm] = useState("");
@@ -154,7 +156,8 @@ export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors) =>
+  StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -247,4 +250,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-});
+  });

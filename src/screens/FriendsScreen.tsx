@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet } from "react-native";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 
 export default function FriendsScreen() {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Friends</Text>
@@ -12,7 +15,8 @@ export default function FriendsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -31,4 +35,4 @@ const styles = StyleSheet.create({
     color: COLORS.grayText,
     textAlign: "center",
   },
-});
+  });

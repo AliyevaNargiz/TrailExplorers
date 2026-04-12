@@ -12,12 +12,14 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddNewTrailBasic">;
 
 export default function AddNewTrailBasicScreen({ navigation }: Props) {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [region, setRegion] = useState("");
@@ -136,7 +138,8 @@ export default function AddNewTrailBasicScreen({ navigation }: Props) {
 );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors) =>
+  StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -218,4 +221,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-});
+  });

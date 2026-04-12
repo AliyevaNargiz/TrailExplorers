@@ -369,7 +369,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 import type { Trail } from "../data/trails";
 import { fetchTrails } from "../services/trailsService";
 import { RootStackParamList } from "../app/navigationTypes";
@@ -384,6 +384,8 @@ const trailImages: Record<string, any> = {
 };
 
 export default function FindTrailScreen() {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
   const navigation = useNavigation<StackNav>();
 
   const [trails, setTrails] = useState<Trail[]>([]);
@@ -482,7 +484,8 @@ export default function FindTrailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors) =>
+  StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -583,4 +586,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.grayText,
   },
-});
+  });

@@ -2,12 +2,14 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 import { useGoogleSignIn } from "../services/auth";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
   const [loading, setLoading] = React.useState(false);
   const { request, signIn } = useGoogleSignIn();
 
@@ -44,9 +46,10 @@ export default function LoginScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: "center", gap: 16, backgroundColor: COLORS.white },
-  title: { fontSize: 26, fontWeight: "800", color: COLORS.black, textAlign: "center" },
-  primaryButton: { height: 50, borderRadius: 14, backgroundColor: COLORS.black, alignItems: "center", justifyContent: "center" },
-  primaryText: { color: COLORS.white, fontSize: 15, fontWeight: "700" },
-});
+const createStyles = (COLORS: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, padding: 24, justifyContent: "center", gap: 16, backgroundColor: COLORS.white },
+    title: { fontSize: 26, fontWeight: "800", color: COLORS.black, textAlign: "center" },
+    primaryButton: { height: 50, borderRadius: 14, backgroundColor: COLORS.black, alignItems: "center", justifyContent: "center" },
+    primaryText: { color: COLORS.white, fontSize: 15, fontWeight: "700" },
+  });

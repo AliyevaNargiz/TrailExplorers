@@ -2,11 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TrailSubmission">;
 
 export default function TrailSubmissionSuccessScreen({ navigation }: Props) {
+  const { colors: COLORS, isDark } = useAppTheme();
+  const styles = createStyles(COLORS, isDark);
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -29,7 +31,8 @@ export default function TrailSubmissionSuccessScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors, isDark: boolean) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -39,7 +42,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    backgroundColor: "#dce9c6",
+    backgroundColor: isDark ? COLORS.lightGray : "#dce9c6",
     borderRadius: 20,
     padding: 24,
     gap: 12,
@@ -70,4 +73,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-});
+  });

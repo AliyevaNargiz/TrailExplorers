@@ -181,7 +181,7 @@ import MapView, { Marker, Polyline, Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "OfflineMap">;
 
@@ -227,6 +227,8 @@ function findNearestRouteIndex(user: LatLng, route: LatLng[]) {
 }
 
 export default function OfflineMapScreen({ route, navigation }: Props) {
+  const { colors: COLORS, isDark } = useAppTheme();
+  const styles = createStyles(COLORS, isDark);
   const { trail, navigationMode = false } = route.params;
 
   const mapRef = useRef<MapView | null>(null);
@@ -391,7 +393,8 @@ export default function OfflineMapScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors, isDark: boolean) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -426,7 +429,7 @@ const styles = StyleSheet.create({
   navigationCard: {
     marginHorizontal: 16,
     marginBottom: 10,
-    backgroundColor: "rgba(255,255,255,0.96)",
+    backgroundColor: isDark ? COLORS.lightGray : "rgba(255,255,255,0.96)",
     borderRadius: 16,
     padding: 14,
     gap: 4,
@@ -445,4 +448,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.grayText,
   },
-});
+  });

@@ -14,6 +14,13 @@ export type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Main: undefined;
+  Settings: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
+  About: undefined;
+  ManageAccount: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfUse: undefined;
   TrailDetail: { id: string };
   AllTrails: undefined;
 

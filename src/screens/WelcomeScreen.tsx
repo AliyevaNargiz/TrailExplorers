@@ -2,11 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, SafeAreaView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Welcome">;
 
 export default function WelcomeScreen({ navigation }: Props) {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
@@ -43,7 +46,8 @@ export default function WelcomeScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -112,4 +116,4 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontSize: 11,
   },
-});
+  });

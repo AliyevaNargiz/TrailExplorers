@@ -1,4 +1,8 @@
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  DefaultTheme,
+  NavigationContainer,
+  type Theme,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Image } from "react-native";
@@ -15,22 +19,32 @@ import TrailDetailScreen from "../screens/TrailDetailScreen";
 import { MainTabParamList, RootStackParamList } from "./navigationTypes";
 import AllTrailsScreen from "../screens/AllTrailsScreen";
 import OfflineMapScreen from "../screens/OfflineMapScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import AboutScreen from "../screens/AboutScreen";
+import ManageAccountScreen from "../screens/ManageAccountScreen";
+import PrivacyPolicyScreen from "../screens/PrivacyPolicyScreen";
+import TermsOfUseScreen from "../screens/TermsOfUseScreen";
 // import TrailMap from "../screens/TrailMap";
 import AddNewTrailBasicScreen from "../screens/AddNewTrailBasicScreen";
 import AddNewTrailMediaScreen from "../screens/AddNewTrailMediaScreen";
 import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
+import { ThemeProvider, useAppTheme } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
+  const { colors } = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e6e6e6",
+          backgroundColor: colors.white,
+          borderTopColor: colors.softBorder,
           height: 70,
           paddingBottom: 10,
           paddingTop: 6,
@@ -39,8 +53,8 @@ function MainTabs() {
           fontSize: 11,
           fontWeight: "600",
         },
-        tabBarActiveTintColor: "#111111",
-        tabBarInactiveTintColor: "#8b8b8b",
+        tabBarActiveTintColor: colors.black,
+        tabBarInactiveTintColor: colors.grayText,
       }}
     >
       <Tab.Screen
@@ -111,14 +125,36 @@ function MainTabs() {
   );
 }
 
-export default function Navigation() {
+function AppNavigator() {
+  const { colors } = useAppTheme();
+
+  const navigationTheme: Theme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: colors.green,
+      background: colors.white,
+      card: colors.white,
+      text: colors.black,
+      border: colors.border,
+      notification: colors.accent,
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
+        <Stack.Screen name="ManageAccount" component={ManageAccountScreen} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+        <Stack.Screen name="TermsOfUse" component={TermsOfUseScreen} />
         <Stack.Screen name="AllTrails" component={AllTrailsScreen} />
         <Stack.Screen name="TrailDetail" component={TrailDetailScreen} />
         <Stack.Screen name="OfflineMap" component={OfflineMapScreen} />
@@ -128,5 +164,13 @@ export default function Navigation() {
         <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function Navigation() {
+  return (
+    <ThemeProvider>
+      <AppNavigator />
+    </ThemeProvider>
   );
 }
