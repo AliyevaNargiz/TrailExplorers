@@ -15,10 +15,20 @@ import TrailDetailScreen from "../screens/TrailDetailScreen";
 import { MainTabParamList, RootStackParamList } from "./navigationTypes";
 import AllTrailsScreen from "../screens/AllTrailsScreen";
 import OfflineMapScreen from "../screens/OfflineMapScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import AboutScreen from "../screens/AboutScreen";
+import ManageAccountScreen from "../screens/ManageAccountScreen";
+import PrivacyPolicyScreen from "../screens/PrivacyPolicyScreen";
+import TermsOfUseScreen from "../screens/TermsOfUseScreen";
 // import TrailMap from "../screens/TrailMap";
 import AddNewTrailBasicScreen from "../screens/AddNewTrailBasicScreen";
 import AddNewTrailMediaScreen from "../screens/AddNewTrailMediaScreen";
+import RecordTrailScreen from "../screens/RecordTrailScreen";
 import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
+import OfflineMapsScreen from "../screens/OfflineMapsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -93,7 +103,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Maps"
-        component={FindTrailScreen}
+        component={OfflineMapsScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <Image
@@ -111,7 +121,7 @@ function MainTabs() {
   );
 }
 
-export default function Navigation() {
+function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -119,14 +129,34 @@ export default function Navigation() {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
+        <Stack.Screen name="ManageAccount" component={ManageAccountScreen} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+        <Stack.Screen name="TermsOfUse" component={TermsOfUseScreen} />
         <Stack.Screen name="AllTrails" component={AllTrailsScreen} />
         <Stack.Screen name="TrailDetail" component={TrailDetailScreen} />
         <Stack.Screen name="OfflineMap" component={OfflineMapScreen} />
-        
+        <Stack.Screen name="OfflineMaps" component={OfflineMapsScreen} />
+
         <Stack.Screen name="AddNewTrailBasic" component={AddNewTrailBasicScreen} />
         <Stack.Screen name="AddNewTrailMedia" component={AddNewTrailMediaScreen} />
+        <Stack.Screen name="RecordTrail" component={RecordTrailScreen} />
         <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+import { ThemeProvider } from "../theme/themeContext";
+
+export default function Navigation() {
+  return (
+    <ThemeProvider>
+      <AppNavigator />
+    </ThemeProvider>
   );
 }

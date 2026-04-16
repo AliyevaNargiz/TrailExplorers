@@ -382,7 +382,8 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
+// import { COLORS } from "../theme/colors";
 import type { Trail } from "../data/trails";
 import { fetchTrailById } from "../services/trailsService";
 import * as Location from "expo-location";
@@ -401,6 +402,8 @@ import * as Linking from "expo-linking";
 type Props = NativeStackScreenProps<RootStackParamList, "TrailDetail">;
 
 export default function TrailDetailScreen({ navigation, route }: Props) {
+   const { colors: COLORS, isDark } = useAppTheme();
+  const styles = createStyles(COLORS, isDark);
   const trailId = route.params?.id;
   const [trail, setTrail] = useState<Trail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -458,7 +461,7 @@ export default function TrailDetailScreen({ navigation, route }: Props) {
 
     try {
       setOfflineLoading(true);
-      await saveOfflineMap(trail.id);
+      await saveOfflineMap(trail);
       setOfflineDownloaded(true);
       Alert.alert("Saved", "Offline map saved for this trail.");
     } catch (e) {
@@ -660,7 +663,8 @@ const handleNavigate = useCallback(() => {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors, isDark: boolean) =>
+StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,

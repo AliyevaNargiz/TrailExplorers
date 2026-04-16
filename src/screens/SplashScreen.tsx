@@ -2,11 +2,15 @@ import React, { useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { COLORS } from "../theme/colors";
+// import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Splash">;
 
 export default function SplashScreen({ navigation }: Props) {
+  const { colors: COLORS, isDark } = useAppTheme();
+  const styles = createStyles(COLORS, isDark);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace("Welcome");
@@ -27,7 +31,8 @@ export default function SplashScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors, isDark: boolean) =>
+StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: COLORS.green,

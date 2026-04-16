@@ -8,14 +8,18 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from "react-native";
+import { useGoogleSignIn } from "../services/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CompositeScreenProps } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { MainTabParamList, RootStackParamList } from "../app/navigationTypes";
 import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/themeContext";
 import type { Trail } from "../data/trails";
 import { fetchTrails } from "../services/trailsService";
 
@@ -36,9 +40,12 @@ const trailImages: Record<string, any> = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
+  const { colors: COLORS, isDark } = useAppTheme();
+  const styles = createStyles(COLORS, isDark);
   const [menuOpen, setMenuOpen] = useState(false);
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loadingTrails, setLoadingTrails] = useState(true);
+  const { logout } = useGoogleSignIn();
 
   const progressItems = [
     "2.5 km total hike completed",
@@ -47,6 +54,9 @@ export default function HomeScreen({ navigation }: Props) {
     "Added 2 new trail for exploration",
     "“Qobustan” trail in progress",
   ];
+
+  const rootNavigation =
+  navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     const load = async () => {
@@ -409,10 +419,12 @@ export default function HomeScreen({ navigation }: Props) {
             </Pressable>
 
             <View style={styles.topIcons}>
-              <Image
-                source={require("../../assets/icon-circle.png")}
-                style={styles.iconImage}
-              />
+              <Pressable onPress={() => navigation.navigate("RecordTrail")}>
+  <Image
+    source={require("../../assets/icon-circle.png")}
+    style={styles.iconImage}
+  />
+</Pressable>
               <Pressable onPress={() => navigation.navigate("AddNewTrailBasic")}>
   <Image
     source={require("../../assets/icon-plus.png")}
@@ -538,12 +550,54 @@ export default function HomeScreen({ navigation }: Props) {
                 },
                 { label: "Log out", icon: require("../../assets/logout 1.png") },
               ].map((item) => (
-                <View key={item.label} style={styles.menuRow}>
+                <Pressable
+                  key={item.label}
+                  style={styles.menuRow}
+                  onPress={() => {
+                    if (item.label === "Settings") {
+                      setMenuOpen(false);
+                      navigation.navigate("Settings");
+                      return;
+                    }
+                      if (item.label === "Personal Profile") {
+    setMenuOpen(false);
+    navigation.navigate("Profile");
+    return;
+  }
+
+  if (item.label === "Log out") {
+    Alert.alert(
+      "Log out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setMenuOpen(false);
+              await logout();
+              rootNavigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+            } catch (error) {
+              console.log("Logout error:", error);
+              Alert.alert("Error", "Failed to log out.");
+            }
+          },
+        },
+      ]
+    );
+  }
+                  }}
+                >
                   {item.icon ? (
                     <Image source={item.icon} style={styles.menuIcon} />
                   ) : null}
                   <Text style={styles.menuItem}>{item.label}</Text>
-                </View>
+                </Pressable>
               ))}
             </Pressable>
           </Pressable>
@@ -553,7 +607,8 @@ export default function HomeScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors, isDark: boolean) =>
+StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -708,7 +763,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#3b0d0d",
+    backgroundColor: isDark ? COLORS.darkGreen : "#3b0d0d",
   },
   menuOverlay: {
     ...StyleSheet.absoluteFillObject,

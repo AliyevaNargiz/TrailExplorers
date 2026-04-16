@@ -12,6 +12,7 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
 import { COLORS } from "../theme/colors";
+import { type ThemeColors, useAppTheme } from "../theme/themeContext";
 import type { Trail } from "../data/trails";
 import { fetchTrails } from "../services/trailsService";
 
@@ -27,6 +28,8 @@ const trailImages: Record<string, any> = {
 };
 
 export default function AllTrailsScreen({ navigation }: Props) {
+  const { colors: COLORS } = useAppTheme();
+  const styles = createStyles(COLORS);
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,7 +111,8 @@ export default function AllTrailsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS: ThemeColors) =>
+StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.white, paddingHorizontal: 22, paddingTop: 16 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   backBtn: {

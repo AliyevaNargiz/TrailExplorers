@@ -1,5 +1,6 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
+import { auth } from "./firebase";
 
 type SubmissionPayload = {
   name: string;
@@ -19,8 +20,20 @@ type SubmissionPayload = {
 };
 
 export async function submitTrailSubmission(payload: SubmissionPayload) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
   const docRef = await addDoc(collection(db, "trail_submissions"), {
     ...payload,
+    submittedBy: {
+      uid: user.uid,
+      name: user.displayName || "",
+      email: user.email || "",
+      photoURL: user.photoURL || "",
+    },
+
     status: "pending_ai",
     createdAt: serverTimestamp(),
     aiVerification: {

@@ -7,6 +7,7 @@ import HomeScreen from "../screens/HomeScreen";
 import EcoScreen from "../screens/EcoChallengesScreen";
 import FriendsScreen from "../screens/FriendsScreen";
 import MapsScreen from "../screens/MapsScreen";
+import OfflineMapsScreen from "./OfflineMapsScreen";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -16,7 +17,7 @@ export default function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Eco" component={EcoScreen} />
       <Tab.Screen name="Friends" component={FriendsScreen} />
-      <Tab.Screen name="Maps" component={MapsScreen} />
+      <Tab.Screen name="Maps" component={OfflineMapsScreen} />
     </Tab.Navigator>
   );
 }

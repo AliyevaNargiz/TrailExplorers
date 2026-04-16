@@ -21,15 +21,29 @@ function requireEnv(name: string): string {
   return val;
 }
 
-GoogleSignin.configure({
-  webClientId: requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"),
-  offlineAccess: true,
-});
+let isConfigured = false;
+
+function configure() {
+  if (!isConfigured) {
+    GoogleSignin.configure({
+      webClientId: "286057375578-q9i9h9iqujr6l7ct5flrh8t4h0c1k05q.apps.googleusercontent.com",
+      offlineAccess: true,
+    });
+    isConfigured = true;
+  }
+}
+
+// GoogleSignin.configure({
+//   // webClientId: requireEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"),
+//   webClientId: "286057375578-q9i9h9iqujr6l7ct5flrh8t4h0c1k05q.apps.googleusercontent.com",
+//   offlineAccess: true,
+// });
 
 export function useGoogleSignIn() {
   const request = true;
 
   const signIn = async () => {
+    configure();
     await GoogleSignin.hasPlayServices();
 
     const result = await GoogleSignin.signIn();
