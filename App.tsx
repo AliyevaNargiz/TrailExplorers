@@ -13,9 +13,15 @@
 //   return <Navigation />;
 // }
 
-import React from "react";
+// import React from "react";
+import React, { useEffect } from "react";
+import "./src/services/backgroundLocationTask";
 import Navigation from "./src/app/Navigation";
+import { syncPendingRecordedTrails } from "./src/services/pendingTrailSyncService";
 
 export default function App() {
+  useEffect(() => {
+    syncPendingRecordedTrails().catch(console.log);
+  }, []);
   return <Navigation />;
 }
