@@ -253,7 +253,9 @@
 //   },
 // });  
 
-import React, { useMemo, useState } from "react";
+// import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
+
 import {
   View,
   Text,
@@ -265,50 +267,124 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
 import { type ThemeColors, useAppTheme } from "../theme/themeContext";
-import { submitTrailSubmission } from "../services/trailSubmissionService";
+import {
+  submitTrailSubmission,
+  uploadTrailImageAsync,
+} from "../services/trailSubmissionService";
+import { mapRecordedTrailToMediaDraft } from "../services/trailRecordingMapper";
+import * as ImagePicker from "expo-image-picker";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddNewTrailMedia">;
 
 export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
   const { colors: COLORS } = useAppTheme();
   const styles = createStyles(COLORS);
-  const { draft } = route.params;
+  const { draft, recordedTrail } = route.params;
 
-  const [waypointNotes, setWaypointNotes] = useState("");
-  const [distanceKm, setDistanceKm] = useState("");
-  const [durationHours, setDurationHours] = useState("");
-  const [elevationGain, setElevationGain] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  // const [waypointNotes, setWaypointNotes] = useState("");
+  // const [distanceKm, setDistanceKm] = useState("");
+  // const [durationHours, setDurationHours] = useState("");
+  // const [elevationGain, setElevationGain] = useState("");
+  // const [submitting, setSubmitting] = useState(false);
 
-  const mockRoute = useMemo(
-    () => [
-      { latitude: 40.4093, longitude: 49.8671 },
-      { latitude: 40.4102, longitude: 49.8682 },
-      { latitude: 40.4111, longitude: 49.8691 },
-    ],
-    []
-  );
+  const mappedRecording = recordedTrail
+  ? mapRecordedTrailToMediaDraft(recordedTrail)
+  : null;
 
+const [waypointNotes, setWaypointNotes] = useState("");
+const [distanceKm, setDistanceKm] = useState(
+  mappedRecording?.distanceKm?.toString() ?? ""
+);
+const [durationHours, setDurationHours] = useState(
+  mappedRecording?.durationHours?.toString() ?? ""
+);
+const [elevationGain, setElevationGain] = useState(
+  mappedRecording?.elevationGain?.toString() ?? ""
+);
+const [submitting, setSubmitting] = useState(false);
+const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+const [uploadingImage, setUploadingImage] = useState(false);
+
+const routeFromRecording = mappedRecording?.route ?? [];
+
+  // const mockRoute = useMemo(
+  //   () => [
+  //     { latitude: 40.4093, longitude: 49.8671 },
+  //     { latitude: 40.4102, longitude: 49.8682 },
+  //     { latitude: 40.4111, longitude: 49.8691 },
+  //   ],
+  //   []
+  // );
+
+ const handlePickImage = async () => {
+  try {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Please allow access to your photos.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (result.canceled) return;
+
+    const asset = result.assets?.[0];
+    if (!asset?.uri) return;
+
+    setUploadingImage(true);
+
+    const downloadURL = await uploadTrailImageAsync(asset.uri);
+
+    setMediaUrls((prev) => [...prev, downloadURL]);
+  } catch (error) {
+    console.log("Image upload failed:", error);
+    Alert.alert("Error", "Failed to upload image.");
+  } finally {
+    setUploadingImage(false);
+  }
+};
+
+// 👇 EXISTING FUNCTION (already in your file)
+ 
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
 
+      // const payload = {
+      //   ...draft,
+      //   waypointNotes: waypointNotes.trim(),
+      //   mediaUrls: [],
+      //   route: mockRoute,
+      //   routeStats: {
+      //     distanceKm: Number(distanceKm) || 0,
+      //     durationHours: Number(durationHours) || 0,
+      //     elevationGain: Number(elevationGain) || 0,
+      //   },
+      // };
+
       const payload = {
-        ...draft,
-        waypointNotes: waypointNotes.trim(),
-        mediaUrls: [],
-        route: mockRoute,
-        routeStats: {
-          distanceKm: Number(distanceKm) || 0,
-          durationHours: Number(durationHours) || 0,
-          elevationGain: Number(elevationGain) || 0,
-        },
-      };
+  ...draft,
+  waypointNotes: waypointNotes.trim(),
+  mediaUrls: [],
+  route: routeFromRecording,
+  routeStats: {
+    distanceKm: Number(distanceKm) || 0,
+    durationHours: Number(durationHours) || 0,
+    elevationGain: Number(elevationGain) || 0,
+  },
+  sourceRecordedTrailId: mappedRecording?.sourceRecordedTrailId ?? null,
+};
 
       const result = await submitTrailSubmission(payload);
 
@@ -346,9 +422,7 @@ export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
               <Pressable
                 key={item}
                 style={styles.uploadBox}
-                onPress={() =>
-                  Alert.alert("Coming soon", "Media upload will be added next.")
-                }
+                onPress={handlePickImage}
               >
                 <Text style={styles.uploadPlus}>+</Text>
               </Pressable>
@@ -356,9 +430,7 @@ export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
 
             <Pressable
               style={styles.uploadBox}
-              onPress={() =>
-                Alert.alert("Coming soon", "Media upload will be added next.")
-              }
+              onPress={handlePickImage}
             >
               <Text style={styles.addMoreText}>Add{"\n"}More</Text>
             </Pressable>
@@ -413,21 +485,21 @@ export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
               <View style={styles.metricPill}>
                 <Text style={styles.metricLabel}>Length</Text>
                 <Text style={styles.metricValue}>
-                  {distanceKm.trim() || "5.4 km"}
+                  {distanceKm.trim() ? `${distanceKm.trim()} km` : "0.0 km"}
                 </Text>
               </View>
 
               <View style={styles.metricPill}>
                 <Text style={styles.metricLabel}>Elevation</Text>
                 <Text style={styles.metricValue}>
-                  {elevationGain.trim() || "280 m"}
+                  {elevationGain.trim() ? `${elevationGain.trim()} m` : "0 m"}
                 </Text>
               </View>
 
               <View style={styles.metricPill}>
                 <Text style={styles.metricLabel}>Time</Text>
                 <Text style={styles.metricValue}>
-                  {durationHours.trim() || "2.5 hr"}
+                  {durationHours.trim() ? `${durationHours.trim()} hr` : "0 hr"}
                 </Text>
               </View>
             </View>
@@ -435,10 +507,15 @@ export default function AddNewTrailMediaScreen({ route, navigation }: Props) {
 
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>Temporary route setup</Text>
-            <Text style={styles.infoText}>
+            {/* <Text style={styles.infoText}>
               For now, this screen uses a placeholder route. Later you can connect
               it to your real recorded trail path, map picker, and media upload flow.
-            </Text>
+            </Text> */}
+            <Text style={styles.infoText}>
+  {recordedTrail
+    ? "This trail was pre-filled from your recorded route. You can still edit the values before submitting."
+    : "You can enter route details manually now, and later connect this screen to a recorded trail or map picker."}
+</Text>
           </View>
 
           <View style={styles.actionsRow}>

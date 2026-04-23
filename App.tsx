@@ -14,14 +14,38 @@
 // }
 
 // import React from "react";
+// import React, { useEffect } from "react";
+// import "./src/services/backgroundLocationTask";
+// import Navigation from "./src/app/Navigation";
+// import { syncPendingRecordedTrails } from "./src/services/pendingTrailSyncService";
+
+// export default function App() {
+//   useEffect(() => {
+//     syncPendingRecordedTrails().catch(console.log);
+//   }, []);
+//   return <Navigation />;
+// }
+
 import React, { useEffect } from "react";
 import "./src/services/backgroundLocationTask";
 import Navigation from "./src/app/Navigation";
 import { syncPendingRecordedTrails } from "./src/services/pendingTrailSyncService";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./src/services/firebase";
 
 export default function App() {
   useEffect(() => {
-    syncPendingRecordedTrails().catch(console.log);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User ready, syncing pending trails...");
+        syncPendingRecordedTrails().catch(console.log);
+      } else {
+        console.log("No user yet, waiting...");
+      }
+    });
+
+    return unsubscribe;
   }, []);
+
   return <Navigation />;
 }

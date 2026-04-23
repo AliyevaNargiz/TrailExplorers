@@ -909,6 +909,7 @@ import { calculateTotalDistance } from "../services/trailRecordingUtils";
 import { BACKGROUND_LOCATION_TASK } from "../services/backgroundLocationTask";
 import { saveRecordedTrailToFirestore } from "../services/recordTrailService";
 import { COLORS } from "../theme/colors";
+import { publishRecordedTrailToTrails } from "../services/trailsService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RecordTrail">;
 
@@ -918,6 +919,7 @@ export default function RecordTrailScreen({ navigation }: Props) {
   const [isPaused, setIsPaused] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const storagePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1010,7 +1012,7 @@ export default function RecordTrailScreen({ navigation }: Props) {
 
     if (!alreadyStarted) {
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.BestForNavigation,
         timeInterval: 3000,
         distanceInterval: 5,
         pausesUpdatesAutomatically: false,
@@ -1198,6 +1200,8 @@ export default function RecordTrailScreen({ navigation }: Props) {
 
       await clearActiveRecording();
 
+      const trailId = await publishRecordedTrailToTrails(recordedTrail);
+
       setIsRecording(false);
       setIsPaused(false);
       setPoints([]);
@@ -1206,9 +1210,13 @@ export default function RecordTrailScreen({ navigation }: Props) {
 
       // Alert.alert("Success", "Trail saved to Firestore successfully.");
 
-      navigation.navigate("TrailSubmission", {
-        recordedTrail,
-      });
+      // navigation.navigate("TrailSubmission", {
+      //   recordedTrail,
+      // });
+      navigation.navigate("TrailDetail", {
+  id: trailId,
+});
+
   //   } catch (error) {
   //     console.log("Failed to save recorded trail:", error);
   //     Alert.alert(

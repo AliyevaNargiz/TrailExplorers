@@ -29,6 +29,7 @@ import AddNewTrailMediaScreen from "../screens/AddNewTrailMediaScreen";
 import RecordTrailScreen from "../screens/RecordTrailScreen";
 import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
 import OfflineMapsScreen from "../screens/OfflineMapsScreen";
+import MyAddedTrailScreen from "../screens/MyAddedTrailScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -146,6 +147,7 @@ function AppNavigator() {
         <Stack.Screen name="AddNewTrailMedia" component={AddNewTrailMediaScreen} />
         <Stack.Screen name="RecordTrail" component={RecordTrailScreen} />
         <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
+        <Stack.Screen name="MyAddedTrail" component={MyAddedTrailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

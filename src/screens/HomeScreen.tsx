@@ -22,6 +22,8 @@ import { COLORS } from "../theme/colors";
 import { type ThemeColors, useAppTheme } from "../theme/themeContext";
 import type { Trail } from "../data/trails";
 import { fetchTrails } from "../services/trailsService";
+import { fetchMyTrailSubmissions } from "../services/trailSubmissionService";
+
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, "Home">,
@@ -45,7 +47,10 @@ export default function HomeScreen({ navigation }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loadingTrails, setLoadingTrails] = useState(true);
+   const [myAddedTrails, setMyAddedTrails] = useState<any[]>([]);
+const [loadingMyAddedTrails, setLoadingMyAddedTrails] = useState(true);
   const { logout } = useGoogleSignIn();
+ 
 
   const progressItems = [
     "2.5 km total hike completed",
@@ -78,8 +83,26 @@ export default function HomeScreen({ navigation }: Props) {
     load();
   }, []);
 
+useEffect(() => {
+  const loadMyAddedTrails = async () => {
+    try {
+      setLoadingMyAddedTrails(true);
+      const data = await fetchMyTrailSubmissions();
+      setMyAddedTrails(data);
+    } catch (error) {
+      console.log("Failed to load added trails:", error);
+      setMyAddedTrails([]);
+    } finally {
+      setLoadingMyAddedTrails(false);
+    }
+  };
+
+  loadMyAddedTrails();
+}, []);
+
   // show only first 3 trails in the Home section
   const discoverCards = useMemo(() => trails.slice(0, 3), [trails]);
+  const addedTrailCards = useMemo(() => myAddedTrails.slice(0, 3), [myAddedTrails]);
 
 //   return (
 //     <SafeAreaView style={styles.safeArea}>
@@ -463,7 +486,7 @@ export default function HomeScreen({ navigation }: Props) {
               </Text>
             </View>
 
-            <Pressable onPress={() => navigation.navigate("Maps")}>
+            <Pressable onPress={() => navigation.navigate("AllTrails")}>
               <Text style={styles.viewAll}>view all</Text>
             </Pressable>
           </View>
@@ -508,6 +531,52 @@ export default function HomeScreen({ navigation }: Props) {
             />
           )}
 
+         <View style={styles.sectionHeader}>
+  <View style={styles.sectionTextWrap}>
+    <Text style={styles.sectionTitle}>YOUR ADDED TRAILS</Text>
+    <Text style={styles.sectionSubtitle}>
+      Trails you submitted from Add New Trail
+    </Text>
+  </View>
+
+  <Pressable onPress={() => navigation.navigate("MyAddedTrail")}>
+    <Text style={styles.viewAll}>view all</Text>
+  </Pressable>
+</View>
+
+{loadingMyAddedTrails ? (
+  <View style={styles.loaderWrap}>
+    <ActivityIndicator />
+  </View>
+) : (
+  <FlatList
+    data={addedTrailCards}
+    keyExtractor={(item) => item.id}
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.trailList}
+    renderItem={({ item }) => (
+      <View style={styles.addedTrailCard}>
+        <Text style={styles.addedTrailStatus}>
+          {item.status === "pending_ai" ? "Pending" : item.status}
+        </Text>
+
+        <Text style={styles.addedTrailTitle}>{item.name}</Text>
+
+        <Text style={styles.addedTrailMeta}>
+          {item.region} • {item.difficulty}
+        </Text>
+
+        <Text style={styles.addedTrailMeta}>
+          {item.distanceKm} km • {item.durationHours} h
+        </Text>
+      </View>
+    )}
+    ListEmptyComponent={
+      <Text style={styles.emptyText}>No added trails yet.</Text>
+    }
+  />
+)}
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTextWrap}>
               <Text style={styles.sectionTitle}>MEET PROFESSIONAL GUIDES</Text>
@@ -810,4 +879,36 @@ StyleSheet.create({
     height: 16,
     resizeMode: "contain",
   },
+  addedTrailCard: {
+  width: 170,
+  minHeight: 110,
+  borderRadius: 14,
+  backgroundColor: COLORS.lightGray,
+  padding: 12,
+  justifyContent: "space-between",
+},
+
+addedTrailStatus: {
+  alignSelf: "flex-start",
+  fontSize: 9,
+  fontWeight: "700",
+  color: COLORS.white,
+  backgroundColor: COLORS.green,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 10,
+},
+
+addedTrailTitle: {
+  marginTop: 10,
+  fontSize: 12,
+  fontWeight: "700",
+  color: COLORS.black,
+},
+
+addedTrailMeta: {
+  marginTop: 4,
+  fontSize: 10,
+  color: COLORS.grayText,
+},
 });

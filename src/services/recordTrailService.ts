@@ -33,7 +33,8 @@
 //   return docRef.id;
 // }
 
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+// import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { db, auth } from "./firebase";
 import type { RecordedTrail } from "../app/navigationTypes";
 
@@ -44,7 +45,7 @@ export async function saveRecordedTrailToFirestore(trail: RecordedTrail) {
     throw new Error("User not authenticated");
   }
 
-  const ref = doc(db, "trails", trail.id);
+  const ref = doc(db, "recorded_trails", trail.id);
 
   await setDoc(
     ref,
@@ -72,4 +73,49 @@ export async function saveRecordedTrailToFirestore(trail: RecordedTrail) {
   );
 
   return trail.id;
+}
+
+export async function fetchRecordedTrailsForCurrentUser(): Promise<RecordedTrail[]> {
+  const user = auth.currentUser;
+
+  if (!user) {
+    return [];
+  }
+
+  const q = query(
+    collection(db, "recorded_trails"),
+    where("userId", "==", user.uid)
+  );
+
+  const snap = await getDocs(q);
+
+  const trails = snap.docs.map((docSnap) => {
+    const data = docSnap.data();
+
+    return {
+      id: docSnap.id,
+      status:
+        data.status === "recording" ||
+        data.status === "paused" ||
+        data.status === "finished"
+          ? data.status
+          : "finished",
+      startedAt: data.startedAt ?? 0,
+      finishedAt: data.finishedAt,
+      durationSeconds: data.durationSeconds ?? 0,
+      distanceMeters: data.distanceMeters ?? 0,
+      coordinates: Array.isArray(data.points)
+        ? data.points.map((point: any) => ({
+            latitude: point.latitude,
+            longitude: point.longitude,
+            timestamp: point.timestamp ?? Date.now(),
+            accuracy: point.accuracy ?? undefined,
+            altitude: point.altitude ?? null,
+            speed: point.speed ?? null,
+          }))
+        : [],
+    } as RecordedTrail;
+  });
+
+  return trails.sort((a, b) => b.startedAt - a.startedAt);
 }

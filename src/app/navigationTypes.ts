@@ -20,6 +20,7 @@ export type LocationPoint = {
 
 export type RecordedTrail = {
   id: string;
+  title?: string;
   status: "recording" | "paused" | "finished";
   startedAt: number;
   finishedAt?: number;
@@ -57,15 +58,27 @@ export type RootStackParamList = {
   TrailDetail: { id: string };
   AllTrails: undefined;
   OfflineMaps: undefined;
+  MyAddedTrail: undefined;
 
   OfflineMap: {
     trail: Trail;
     navigationMode?: boolean;
   };
 
-  AddNewTrailBasic: undefined;
+  // AddNewTrailBasic: undefined;
+  // AddNewTrailMedia: {
+  //   draft: NewTrailDraft;
+  // };
+  
+  AddNewTrailBasic:
+    | {
+        recordedTrail?: RecordedTrail | null;
+      }
+    | undefined;
+
   AddNewTrailMedia: {
     draft: NewTrailDraft;
+    recordedTrail?: RecordedTrail | null;
   };
 
   RecordTrail: undefined;

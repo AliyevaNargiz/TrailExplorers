@@ -25,16 +25,58 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
     const { locations } = data as { locations: Location.LocationObject[] };
     if (!locations?.length) return;
 
-    const newPoints: LocationPoint[] = locations.map((location) => ({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      timestamp: location.timestamp ?? Date.now(),
-      accuracy: location.coords.accuracy ?? undefined,
-      altitude: location.coords.altitude ?? null,
-      speed: location.coords.speed ?? null,
-    }));
+    // const newPoints: LocationPoint[] = locations.map((location) => ({
+    //   latitude: location.coords.latitude,
+    //   longitude: location.coords.longitude,
+    //   timestamp: location.timestamp ?? Date.now(),
+    //   accuracy: location.coords.accuracy ?? undefined,
+    //   altitude: location.coords.altitude ?? null,
+    //   speed: location.coords.speed ?? null,
+    // }));
 
-    const nextCoordinates = [...recording.coordinates, ...newPoints];
+    // const nextCoordinates = [...recording.coordinates, ...newPoints];
+
+    const newPoints: LocationPoint[] = locations.map((location) => ({
+  latitude: location.coords.latitude,
+  longitude: location.coords.longitude,
+  timestamp: location.timestamp ?? Date.now(),
+  accuracy: location.coords.accuracy ?? undefined,
+  altitude: location.coords.altitude ?? null,
+  speed: location.coords.speed ?? null,
+}));
+
+let nextCoordinates = [...recording.coordinates];
+
+for (const point of newPoints) {
+  console.log("NEW GPS POINT:", {
+    lat: point.latitude,
+    lng: point.longitude,
+  });
+
+  const last = nextCoordinates[nextCoordinates.length - 1];
+
+  // ✅ Skip if no previous point
+  if (!last) {
+    nextCoordinates.push(point);
+    continue;
+  }
+
+  // 🔥 Ignore identical coordinates
+  const sameLocation =
+    Math.abs(point.latitude - last.latitude) < 0.00001 &&
+    Math.abs(point.longitude - last.longitude) < 0.00001;
+
+  // 🔥 Ignore very small movement (< ~2 meters)
+  const tooClose =
+    Math.abs(point.latitude - last.latitude) < 0.00002 &&
+    Math.abs(point.longitude - last.longitude) < 0.00002;
+
+  if (sameLocation || tooClose) {
+    continue;
+  }
+
+  nextCoordinates.push(point);
+}
 
     const updated: RecordedTrail = {
       ...recording,
