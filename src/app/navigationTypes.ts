@@ -59,6 +59,14 @@ export type RootStackParamList = {
   AllTrails: undefined;
   OfflineMaps: undefined;
   MyAddedTrail: undefined;
+  FriendProfile: {
+    userId: string;
+    fallbackName?: string;
+    fallbackEmail?: string;
+    fallbackPhotoURL?: string;
+    fallbackHomeRegion?: string;
+    fallbackBio?: string;
+  };
 
   OfflineMap: {
     trail: Trail;
