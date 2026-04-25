@@ -32,6 +32,10 @@ import OfflineMapsScreen from "../screens/OfflineMapsScreen";
 import MyAddedTrailScreen from "../screens/MyAddedTrailScreen";
 import RecordedTrailDetailScreen from "../screens/RecordedTrailDetailScreen";
 import MyRecordedTrailsScreen from "../screens/MyRecordedTrailsScreen";
+import FriendsProfileScreen from "../screens/FriendsProfileScreen";
+import GuidesScreen from "../screens/GuidesScreen";
+import GuideProfileScreen from "../screens/GuideProfileScreen";
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -156,6 +160,9 @@ function AppNavigator() {
   name="MyRecordedTrails"
   component={MyRecordedTrailsScreen}
 />
+        <Stack.Screen name="FriendProfile" component={FriendsProfileScreen} />
+        <Stack.Screen name="Guides" component={GuidesScreen} />
+        <Stack.Screen name="GuideProfile" component={GuideProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
