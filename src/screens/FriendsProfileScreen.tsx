@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -15,12 +17,21 @@ import { RootStackParamList } from "../app/navigationTypes";
 import { type ThemeColors, useAppTheme } from "../theme/themeContext";
 import {
   fetchPublicUserProfile,
+  fetchTrailReviews,
+  fetchTrailReviewSummaries,
   fetchTrailSubmissionsByUserId,
+  submitTrailReview,
+  type PublicTrailReview,
   type PublicTrailSubmissionItem,
   type PublicUserProfile,
 } from "../services/trailSubmissionService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "FriendProfile">;
+
+type ReviewDraft = {
+  rating: number;
+  comment: string;
+};
 
 function getInitials(name: string) {
   const trimmed = name.trim();
@@ -57,6 +68,13 @@ function formatMetric(value: number, suffix: string) {
   return `${value} ${suffix}`;
 }
 
+function renderStars(rating: number) {
+  const safeRating = Math.max(0, Math.min(5, Math.round(rating)));
+  return Array.from({ length: 5 }, (_, index) =>
+    index < safeRating ? "★" : "☆"
+  ).join("");
+}
+
 export default function FriendsProfileScreen({
   navigation,
   route,
@@ -74,6 +92,14 @@ export default function FriendsProfileScreen({
 
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [submissions, setSubmissions] = useState<PublicTrailSubmissionItem[]>([]);
+  const [reviewsBySubmission, setReviewsBySubmission] = useState<
+    Record<string, PublicTrailReview[]>
+  >({});
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({});
+  const [expandedReviewForms, setExpandedReviewForms] = useState<
+    Record<string, boolean>
+  >({});
+  const [submittingReviewId, setSubmittingReviewId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -88,8 +114,18 @@ export default function FriendsProfileScreen({
           fetchTrailSubmissionsByUserId(userId),
         ]);
 
+        const reviewSummaryMap = await fetchTrailReviewSummaries(
+          submissionData.map((submission) => submission.id)
+        );
+
         setProfile(profileData);
-        setSubmissions(submissionData);
+        setSubmissions(
+          submissionData.map((submission) => ({
+            ...submission,
+            averageRating: reviewSummaryMap.get(submission.id)?.averageRating ?? 0,
+            reviewCount: reviewSummaryMap.get(submission.id)?.reviewCount ?? 0,
+          }))
+        );
       } catch (loadError) {
         console.log("Failed to load friend profile:", loadError);
         setError("We couldn't load this hiker's profile right now.");
@@ -128,53 +164,255 @@ export default function FriendsProfileScreen({
     ]
   );
 
+  const loadSubmissionReviews = async (submissionId: string) => {
+    try {
+      const reviews = await fetchTrailReviews(submissionId);
+      setReviewsBySubmission((current) => ({
+        ...current,
+        [submissionId]: reviews,
+      }));
+    } catch (loadError) {
+      console.log("Failed to load submission reviews:", loadError);
+      Alert.alert("Error", "Failed to load trail reviews.");
+    }
+  };
+
+  const handleReviewDraftChange = (
+    submissionId: string,
+    nextDraft: Partial<ReviewDraft>
+  ) => {
+    setReviewDrafts((current) => ({
+      ...current,
+      [submissionId]: {
+        rating: current[submissionId]?.rating ?? 0,
+        comment: current[submissionId]?.comment ?? "",
+        ...nextDraft,
+      },
+    }));
+  };
+
+  const toggleReviewForm = async (submissionId: string) => {
+    const nextExpanded = !expandedReviewForms[submissionId];
+
+    setExpandedReviewForms((current) => ({
+      ...current,
+      [submissionId]: nextExpanded,
+    }));
+
+    if (nextExpanded && !reviewsBySubmission[submissionId]) {
+      await loadSubmissionReviews(submissionId);
+    }
+  };
+
+  const handleSubmitReview = async (submissionId: string) => {
+    const draft = reviewDrafts[submissionId] ?? { rating: 0, comment: "" };
+
+    if (draft.rating < 1 || draft.rating > 5) {
+      Alert.alert("Rating required", "Please choose between 1 and 5 stars.");
+      return;
+    }
+
+    if (!draft.comment.trim()) {
+      Alert.alert("Comment required", "Please add a short comment.");
+      return;
+    }
+
+    try {
+      setSubmittingReviewId(submissionId);
+      await submitTrailReview({
+        submissionId,
+        rating: draft.rating,
+        comment: draft.comment,
+      });
+
+      const reviews = await fetchTrailReviews(submissionId);
+      const ratingTotal = reviews.reduce((sum, review) => sum + review.rating, 0);
+      const averageRating =
+        reviews.length > 0 ? Number((ratingTotal / reviews.length).toFixed(1)) : 0;
+
+      setReviewsBySubmission((current) => ({
+        ...current,
+        [submissionId]: reviews,
+      }));
+      setSubmissions((current) =>
+        current.map((submission) =>
+          submission.id === submissionId
+            ? {
+                ...submission,
+                averageRating,
+                reviewCount: reviews.length,
+              }
+            : submission
+        )
+      );
+      setReviewDrafts((current) => ({
+        ...current,
+        [submissionId]: { rating: 0, comment: "" },
+      }));
+      Alert.alert("Review saved", "Your rating and comment were posted.");
+    } catch (submitError: any) {
+      console.log("Failed to submit trail review:", submitError);
+      Alert.alert("Error", submitError?.message ?? "Failed to submit review.");
+    } finally {
+      setSubmittingReviewId("");
+    }
+  };
+
   const renderSubmissionCard = ({
     item,
   }: {
     item: PublicTrailSubmissionItem;
-  }) => (
-    <View style={styles.submissionCard}>
-      <View style={styles.submissionHeader}>
-        <Text style={styles.submissionTitle} numberOfLines={1}>
-          {item.name}
+  }) => {
+    const reviews = reviewsBySubmission[item.id] ?? [];
+    const draft = reviewDrafts[item.id] ?? { rating: 0, comment: "" };
+    const isExpanded = !!expandedReviewForms[item.id];
+    const isSubmitting = submittingReviewId === item.id;
+
+    return (
+      <View style={styles.submissionCard}>
+        <View style={styles.submissionHeader}>
+          <Text style={styles.submissionTitle} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>
+              {item.status === "pending_ai" ? "Pending" : item.status}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.submissionLocation}>
+          {[item.region, item.village].filter(Boolean).join(" • ") ||
+            "Location not set"}
         </Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>
-            {item.status === "pending_ai" ? "Pending" : item.status}
+
+        {!!item.description && (
+          <Text style={styles.submissionDescription} numberOfLines={3}>
+            {item.description}
           </Text>
+        )}
+
+        <View style={styles.metricsRow}>
+          <View style={styles.metricPill}>
+            <Text style={styles.metricLabel}>Difficulty</Text>
+            <Text style={styles.metricValue}>{item.difficulty}</Text>
+          </View>
+          <View style={styles.metricPill}>
+            <Text style={styles.metricLabel}>Distance</Text>
+            <Text style={styles.metricValue}>
+              {formatMetric(item.distanceKm, "km")}
+            </Text>
+          </View>
+          <View style={styles.metricPill}>
+            <Text style={styles.metricLabel}>Duration</Text>
+            <Text style={styles.metricValue}>
+              {formatMetric(item.durationHours, "h")}
+            </Text>
+          </View>
         </View>
+
+        <View style={styles.reviewSummaryRow}>
+          <View style={styles.reviewSummaryTextWrap}>
+            <Text style={styles.reviewSummaryStars}>
+              {renderStars(item.averageRating)}
+            </Text>
+            <Text style={styles.reviewSummaryMeta}>
+              {item.reviewCount > 0
+                ? `${item.averageRating.toFixed(1)} from ${item.reviewCount} review${
+                    item.reviewCount === 1 ? "" : "s"
+                  }`
+                : "No reviews yet"}
+            </Text>
+          </View>
+
+          <Pressable
+            style={styles.reviewToggleButton}
+            onPress={() => toggleReviewForm(item.id)}
+          >
+            <Text style={styles.reviewToggleText}>
+              {isExpanded ? "Hide reviews" : "Rate trail"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {isExpanded ? (
+          <View style={styles.reviewSection}>
+            <Text style={styles.reviewSectionTitle}>Leave your review</Text>
+
+            <View style={styles.starPickerRow}>
+              {[1, 2, 3, 4, 5].map((value) => (
+                <Pressable
+                  key={value}
+                  onPress={() =>
+                    handleReviewDraftChange(item.id, { rating: value })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.starPickerText,
+                      value <= draft.rating && styles.starPickerTextActive,
+                    ]}
+                  >
+                    ★
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <TextInput
+              value={draft.comment}
+              onChangeText={(comment) =>
+                handleReviewDraftChange(item.id, { comment })
+              }
+              placeholder="Share what stood out on this trail..."
+              placeholderTextColor={COLORS.grayText}
+              multiline
+              style={styles.reviewInput}
+              textAlignVertical="top"
+            />
+
+            <Pressable
+              style={[
+                styles.submitReviewButton,
+                isSubmitting && styles.submitReviewButtonDisabled,
+              ]}
+              onPress={() => handleSubmitReview(item.id)}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.submitReviewButtonText}>
+                {isSubmitting ? "Posting..." : "Post review"}
+              </Text>
+            </Pressable>
+
+            <View style={styles.reviewList}>
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <View key={review.id} style={styles.reviewItem}>
+                    <View style={styles.reviewItemHeader}>
+                      <Text style={styles.reviewAuthor}>
+                        {review.reviewer.name || "Trail Explorer"}
+                      </Text>
+                      <Text style={styles.reviewItemStars}>
+                        {renderStars(review.rating)}
+                      </Text>
+                    </View>
+                    <Text style={styles.reviewItemText}>{review.comment}</Text>
+                    <Text style={styles.reviewItemDate}>
+                      {formatDate(review.createdAt)}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.emptyReviewText}>
+                  Be the first to rate and comment on this shared trail.
+                </Text>
+              )}
+            </View>
+          </View>
+        ) : null}
       </View>
-
-      <Text style={styles.submissionLocation}>
-        {[item.region, item.village].filter(Boolean).join(" • ") || "Location not set"}
-      </Text>
-
-      {!!item.description && (
-        <Text style={styles.submissionDescription} numberOfLines={3}>
-          {item.description}
-        </Text>
-      )}
-
-      <View style={styles.metricsRow}>
-        <View style={styles.metricPill}>
-          <Text style={styles.metricLabel}>Difficulty</Text>
-          <Text style={styles.metricValue}>{item.difficulty}</Text>
-        </View>
-        <View style={styles.metricPill}>
-          <Text style={styles.metricLabel}>Distance</Text>
-          <Text style={styles.metricValue}>
-            {formatMetric(item.distanceKm, "km")}
-          </Text>
-        </View>
-        <View style={styles.metricPill}>
-          <Text style={styles.metricLabel}>Duration</Text>
-          <Text style={styles.metricValue}>
-            {formatMetric(item.durationHours, "h")}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -484,6 +722,122 @@ const createStyles = (COLORS: ThemeColors) =>
       fontSize: 12,
       fontWeight: "800",
       color: COLORS.black,
+    },
+    reviewSummaryRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    reviewSummaryTextWrap: {
+      flex: 1,
+      gap: 3,
+    },
+    reviewSummaryStars: {
+      fontSize: 16,
+      color: COLORS.accent,
+      letterSpacing: 1,
+    },
+    reviewSummaryMeta: {
+      fontSize: 12,
+      color: COLORS.grayText,
+    },
+    reviewToggleButton: {
+      borderRadius: 16,
+      backgroundColor: COLORS.white,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    reviewToggleText: {
+      fontSize: 12,
+      fontWeight: "800",
+      color: COLORS.darkGreen,
+    },
+    reviewSection: {
+      borderTopWidth: 1,
+      borderTopColor: COLORS.softBorder,
+      paddingTop: 14,
+      gap: 12,
+    },
+    reviewSectionTitle: {
+      fontSize: 13,
+      fontWeight: "800",
+      color: COLORS.black,
+    },
+    starPickerRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    starPickerText: {
+      fontSize: 28,
+      color: COLORS.border,
+    },
+    starPickerTextActive: {
+      color: COLORS.accent,
+    },
+    reviewInput: {
+      minHeight: 90,
+      borderRadius: 16,
+      backgroundColor: COLORS.white,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 13,
+      color: COLORS.black,
+    },
+    submitReviewButton: {
+      alignSelf: "flex-start",
+      borderRadius: 18,
+      backgroundColor: COLORS.darkGreen,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    submitReviewButtonDisabled: {
+      opacity: 0.7,
+    },
+    submitReviewButtonText: {
+      fontSize: 12,
+      fontWeight: "800",
+      color: COLORS.white,
+    },
+    reviewList: {
+      gap: 10,
+    },
+    reviewItem: {
+      backgroundColor: COLORS.white,
+      borderRadius: 16,
+      padding: 12,
+      gap: 6,
+    },
+    reviewItemHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 12,
+    },
+    reviewAuthor: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: "800",
+      color: COLORS.black,
+    },
+    reviewItemStars: {
+      fontSize: 13,
+      color: COLORS.accent,
+      letterSpacing: 1,
+    },
+    reviewItemText: {
+      fontSize: 13,
+      lineHeight: 19,
+      color: COLORS.black,
+    },
+    reviewItemDate: {
+      fontSize: 11,
+      color: COLORS.grayText,
+    },
+    emptyReviewText: {
+      fontSize: 12,
+      color: COLORS.grayText,
+      lineHeight: 18,
     },
     emptyWrap: {
       backgroundColor: COLORS.lightGray,

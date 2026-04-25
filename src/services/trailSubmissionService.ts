@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   query,
+  setDoc,
   serverTimestamp,
   where,
 } from "firebase/firestore";
@@ -61,6 +62,20 @@ export type PublicTrailSubmissionItem = {
   features: string[];
   mediaUrls: string[];
   createdAt: any;
+  averageRating: number;
+  reviewCount: number;
+};
+
+export type PublicTrailReview = {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: any;
+  reviewer: {
+    uid: string;
+    name: string;
+    photoURL: string;
+  };
 };
 
 export type PublicUserProfile = {
@@ -107,6 +122,25 @@ function mapSubmissionDoc(
     features: Array.isArray(data.features) ? data.features : [],
     mediaUrls: Array.isArray(data.mediaUrls) ? data.mediaUrls : [],
     createdAt: data.createdAt ?? null,
+    averageRating: 0,
+    reviewCount: 0,
+  };
+}
+
+function mapReviewDoc(id: string, data: Record<string, any>): PublicTrailReview {
+  return {
+    id,
+    rating:
+      typeof data.rating === "number" && data.rating >= 1 && data.rating <= 5
+        ? data.rating
+        : 0,
+    comment: data.comment ?? "",
+    createdAt: data.createdAt ?? null,
+    reviewer: {
+      uid: data.reviewer?.uid ?? "",
+      name: data.reviewer?.name ?? "Trail Explorer",
+      photoURL: data.reviewer?.photoURL ?? "",
+    },
   };
 }
 
@@ -191,6 +225,85 @@ export async function fetchTrailSubmissionsByUserId(userId: string) {
     .sort(
       (a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt)
     );
+}
+
+export async function fetchTrailReviews(submissionId: string) {
+  const snap = await getDocs(
+    collection(db, "trail_submissions", submissionId, "reviews")
+  );
+
+  return snap.docs
+    .map((snapshot) => mapReviewDoc(snapshot.id, snapshot.data()))
+    .sort(
+      (a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt)
+    );
+}
+
+export async function fetchTrailReviewSummaries(submissionIds: string[]) {
+  const summaries = await Promise.all(
+    submissionIds.map(async (submissionId) => {
+      const reviews = await fetchTrailReviews(submissionId);
+      const ratingTotal = reviews.reduce(
+        (sum, review) => sum + (Number.isFinite(review.rating) ? review.rating : 0),
+        0
+      );
+      const reviewCount = reviews.length;
+
+      return {
+        submissionId,
+        reviewCount,
+        averageRating:
+          reviewCount > 0
+            ? Number((ratingTotal / reviewCount).toFixed(1))
+            : 0,
+      };
+    })
+  );
+
+  return new Map(
+    summaries.map((summary) => [
+      summary.submissionId,
+      {
+        averageRating: summary.averageRating,
+        reviewCount: summary.reviewCount,
+      },
+    ])
+  );
+}
+
+export async function submitTrailReview(input: {
+  submissionId: string;
+  rating: number;
+  comment: string;
+}) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const normalizedRating = Math.max(1, Math.min(5, Math.round(input.rating)));
+  const normalizedComment = input.comment.trim();
+
+  if (!normalizedComment) {
+    throw new Error("Comment is required");
+  }
+
+  await setDoc(
+    doc(db, "trail_submissions", input.submissionId, "reviews", user.uid),
+    {
+      rating: normalizedRating,
+      comment: normalizedComment,
+      reviewer: {
+        uid: user.uid,
+        name: user.displayName || "Trail Explorer",
+        photoURL: user.photoURL || "",
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 }
 
 export async function fetchPublicUserProfile(userId: string) {

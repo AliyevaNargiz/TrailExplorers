@@ -31,6 +31,8 @@ import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
 import OfflineMapsScreen from "../screens/OfflineMapsScreen";
 import MyAddedTrailScreen from "../screens/MyAddedTrailScreen";
 import FriendsProfileScreen from "../screens/FriendsProfileScreen";
+import GuidesScreen from "../screens/GuidesScreen";
+import GuideProfileScreen from "../screens/GuideProfileScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -150,6 +152,8 @@ function AppNavigator() {
         <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
         <Stack.Screen name="MyAddedTrail" component={MyAddedTrailScreen} />
         <Stack.Screen name="FriendProfile" component={FriendsProfileScreen} />
+        <Stack.Screen name="Guides" component={GuidesScreen} />
+        <Stack.Screen name="GuideProfile" component={GuideProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

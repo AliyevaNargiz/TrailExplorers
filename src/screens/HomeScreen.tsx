@@ -23,6 +23,7 @@ import { type ThemeColors, useAppTheme } from "../theme/themeContext";
 import type { Trail } from "../data/trails";
 import { fetchTrails } from "../services/trailsService";
 import { fetchMyTrailSubmissions } from "../services/trailSubmissionService";
+import { guides } from "../data/guides";
 
 
 type Props = CompositeScreenProps<
@@ -586,14 +587,29 @@ useEffect(() => {
               </Text>
             </View>
 
-            <Pressable onPress={() => navigation.navigate("AllTrails")}>
+            <Pressable onPress={() => navigation.navigate("Guides")}>
               <Text style={styles.viewAll}>view all</Text>
             </Pressable>
           </View>
 
           <View style={styles.guidesRow}>
-            {[0, 1, 2, 3, 4].map((item) => (
-              <View key={item} style={styles.guideAvatar} />
+            {guides.slice(0, 4).map((guide) => (
+              <Pressable
+                key={guide.id}
+                style={styles.guideAvatar}
+                onPress={() =>
+                  navigation.navigate("GuideProfile", { guideId: guide.id })
+                }
+              >
+                <Text style={styles.guideAvatarText}>
+                  {guide.name
+                    .split(" ")
+                    .map((part) => part[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </Text>
+              </Pressable>
             ))}
           </View>
         </ScrollView>
@@ -833,6 +849,13 @@ StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: isDark ? COLORS.darkGreen : "#3b0d0d",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  guideAvatarText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: "800",
   },
   menuOverlay: {
     ...StyleSheet.absoluteFillObject,
