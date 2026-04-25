@@ -36,44 +36,108 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
 
     // const nextCoordinates = [...recording.coordinates, ...newPoints];
 
-    const newPoints: LocationPoint[] = locations.map((location) => ({
-  latitude: location.coords.latitude,
-  longitude: location.coords.longitude,
-  timestamp: location.timestamp ?? Date.now(),
-  accuracy: location.coords.accuracy ?? undefined,
-  altitude: location.coords.altitude ?? null,
-  speed: location.coords.speed ?? null,
-}));
+//     const newPoints: LocationPoint[] = locations.map((location) => ({
+//   latitude: location.coords.latitude,
+//   longitude: location.coords.longitude,
+//   timestamp: location.timestamp ?? Date.now(),
+//   accuracy: location.coords.accuracy ?? undefined,
+//   altitude: location.coords.altitude ?? null,
+//   speed: location.coords.speed ?? null,
+// }));
+
+// let nextCoordinates = [...recording.coordinates];
+
+// for (const point of newPoints) {
+//   console.log("NEW GPS POINT:", {
+//     lat: point.latitude,
+//     lng: point.longitude,
+//   });
+
+//   const last = nextCoordinates[nextCoordinates.length - 1];
+
+//   // ✅ Skip if no previous point
+//   if (!last) {
+//     nextCoordinates.push(point);
+//     continue;
+//   }
+
+//   // 🔥 Ignore identical coordinates
+//   const sameLocation =
+//     Math.abs(point.latitude - last.latitude) < 0.00001 &&
+//     Math.abs(point.longitude - last.longitude) < 0.00001;
+
+//   // 🔥 Ignore very small movement (< ~2 meters)
+//   const tooClose =
+//     Math.abs(point.latitude - last.latitude) < 0.00002 &&
+//     Math.abs(point.longitude - last.longitude) < 0.00002;
+
+//   if (sameLocation || tooClose) {
+//     continue;
+//   }
+
+//   nextCoordinates.push(point);
+// }
+
+const MIN_DISTANCE_METERS = 12;
+const MAX_ACCURACY_METERS = 20;
+const MIN_SPEED_MPS = 0.7;
 
 let nextCoordinates = [...recording.coordinates];
 
-for (const point of newPoints) {
-  console.log("NEW GPS POINT:", {
+for (const location of locations) {
+  const accuracy = location.coords.accuracy ?? 999;
+  const speed = location.coords.speed ?? 0;
+
+  const point: LocationPoint = {
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    timestamp: location.timestamp ?? Date.now(),
+    accuracy: location.coords.accuracy ?? undefined,
+    altitude: location.coords.altitude ?? null,
+    speed: location.coords.speed ?? null,
+  };
+
+  console.log("GPS POINT:", {
     lat: point.latitude,
     lng: point.longitude,
+    accuracy,
+    speed,
   });
+
+  // Ignore inaccurate GPS points
+  if (accuracy > MAX_ACCURACY_METERS) {
+    console.log("SKIPPED: bad accuracy", accuracy);
+    continue;
+  }
 
   const last = nextCoordinates[nextCoordinates.length - 1];
 
-  // ✅ Skip if no previous point
   if (!last) {
     nextCoordinates.push(point);
     continue;
   }
 
-  // 🔥 Ignore identical coordinates
-  const sameLocation =
-    Math.abs(point.latitude - last.latitude) < 0.00001 &&
-    Math.abs(point.longitude - last.longitude) < 0.00001;
+  const distanceFromLastPoint = calculateTotalDistance([last, point]);
 
-  // 🔥 Ignore very small movement (< ~2 meters)
-  const tooClose =
-    Math.abs(point.latitude - last.latitude) < 0.00002 &&
-    Math.abs(point.longitude - last.longitude) < 0.00002;
+  // Ignore small GPS drift while standing still
+  // if (
+  //   distanceFromLastPoint < MIN_DISTANCE_METERS &&
+  //   speed < MIN_SPEED_MPS
+  // ) {
+  //   console.log("SKIPPED: GPS drift", {
+  //     distanceFromLastPoint,
+  //     speed,
+  //   });
+  //   continue;
+  // }
+if (distanceFromLastPoint < MIN_DISTANCE_METERS) {
+  console.log("SKIPPED: too close / GPS drift", {
+    distanceFromLastPoint,
+    speed,
+  });
+  continue;
+}
 
-  if (sameLocation || tooClose) {
-    continue;
-  }
 
   nextCoordinates.push(point);
 }

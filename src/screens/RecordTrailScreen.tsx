@@ -910,6 +910,7 @@ import { BACKGROUND_LOCATION_TASK } from "../services/backgroundLocationTask";
 import { saveRecordedTrailToFirestore } from "../services/recordTrailService";
 import { COLORS } from "../theme/colors";
 import { publishRecordedTrailToTrails } from "../services/trailsService";
+import { TextInput } from "react-native";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RecordTrail">;
 
@@ -919,6 +920,8 @@ export default function RecordTrailScreen({ navigation }: Props) {
   const [isPaused, setIsPaused] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [trailName, setTrailName] = useState("");
+const [showNameInput, setShowNameInput] = useState(false);
   
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1012,9 +1015,9 @@ export default function RecordTrailScreen({ navigation }: Props) {
 
     if (!alreadyStarted) {
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-        accuracy: Location.Accuracy.BestForNavigation,
+        accuracy: Location.Accuracy.Highest,
         timeInterval: 3000,
-        distanceInterval: 5,
+        distanceInterval: 15,
         pausesUpdatesAutomatically: false,
         showsBackgroundLocationIndicator: true,
         foregroundService: {
@@ -1077,7 +1080,7 @@ export default function RecordTrailScreen({ navigation }: Props) {
       console.log("Start timestamp:", start);
 
       const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
+        accuracy: Location.Accuracy.Highest,
       });
 
       console.log("Current location:", currentLocation);
@@ -1160,6 +1163,10 @@ export default function RecordTrailScreen({ navigation }: Props) {
 
   const finishRecording = async () => {
     try {
+       if (!trailName.trim()) {
+      Alert.alert("Name required", "Please enter a trail name.");
+      return;
+    }
       await stopBackgroundUpdates();
       stopTimer();
 
@@ -1177,6 +1184,7 @@ export default function RecordTrailScreen({ navigation }: Props) {
 
       const recordedTrail: RecordedTrail = {
         ...active,
+         title: trailName.trim(), // ✅ ADD THIS LINE
         status: "finished",
         finishedAt,
         durationSeconds: Math.floor((finishedAt - active.startedAt) / 1000),
@@ -1213,9 +1221,13 @@ export default function RecordTrailScreen({ navigation }: Props) {
       // navigation.navigate("TrailSubmission", {
       //   recordedTrail,
       // });
-      navigation.navigate("TrailDetail", {
-  id: trailId,
-});
+
+      Alert.alert("Saved", "Your recorded trail was saved successfully.", [
+  {
+    text: "OK",
+    onPress: () => navigation.navigate("Main"),
+  },
+]);
 
   //   } catch (error) {
   //     console.log("Failed to save recorded trail:", error);
@@ -1332,9 +1344,24 @@ export default function RecordTrailScreen({ navigation }: Props) {
           ) : null}
 
           {(isRecording || isPaused) ? (
-            <Pressable style={styles.buttonSecondary} onPress={finishRecording}>
+            <Pressable style={styles.buttonSecondary} onPress={() => setShowNameInput(true)}>
               <Text style={styles.buttonTextSecondary}>Finish Recording</Text>
             </Pressable>
+          ) : null}
+
+          {showNameInput ? (
+            <View style={styles.nameBox}>
+              <TextInput
+                placeholder="Enter trail name"
+                value={trailName}
+                onChangeText={setTrailName}
+                style={styles.nameInput}
+              />
+
+              <Pressable style={styles.button} onPress={finishRecording}>
+                <Text style={styles.buttonText}>Save Trail</Text>
+              </Pressable>
+            </View>
           ) : null}
 
           <Pressable style={styles.exitButton} onPress={exitScreen}>
@@ -1429,5 +1456,15 @@ const styles = StyleSheet.create({
   exitText: {
     color: COLORS.black,
     fontWeight: "700",
+  },
+   nameBox: {
+    gap: 10,
+  },
+  nameInput: {
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#f1f1f1",
+    paddingHorizontal: 14,
+    color: COLORS.black,
   },
 });

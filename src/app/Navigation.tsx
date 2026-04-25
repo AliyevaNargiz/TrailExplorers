@@ -30,6 +30,8 @@ import RecordTrailScreen from "../screens/RecordTrailScreen";
 import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
 import OfflineMapsScreen from "../screens/OfflineMapsScreen";
 import MyAddedTrailScreen from "../screens/MyAddedTrailScreen";
+import RecordedTrailDetailScreen from "../screens/RecordedTrailDetailScreen";
+import MyRecordedTrailsScreen from "../screens/MyRecordedTrailsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -141,6 +143,8 @@ function AppNavigator() {
         <Stack.Screen name="AllTrails" component={AllTrailsScreen} />
         <Stack.Screen name="TrailDetail" component={TrailDetailScreen} />
         <Stack.Screen name="OfflineMap" component={OfflineMapScreen} />
+        <Stack.Screen name="RecordedTrailDetail" component={RecordedTrailDetailScreen}/>
+        
         <Stack.Screen name="OfflineMaps" component={OfflineMapsScreen} />
 
         <Stack.Screen name="AddNewTrailBasic" component={AddNewTrailBasicScreen} />
@@ -148,6 +152,10 @@ function AppNavigator() {
         <Stack.Screen name="RecordTrail" component={RecordTrailScreen} />
         <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
         <Stack.Screen name="MyAddedTrail" component={MyAddedTrailScreen} />
+        <Stack.Screen
+  name="MyRecordedTrails"
+  component={MyRecordedTrailsScreen}
+/>
       </Stack.Navigator>
     </NavigationContainer>
   );
