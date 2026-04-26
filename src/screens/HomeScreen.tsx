@@ -27,7 +27,8 @@ import { fetchMyTrailSubmissions } from "../services/trailSubmissionService";
 import { auth } from "../services/firebase";
 import { fetchRecordedTrailsForCurrentUser } from "../services/recordTrailService";
 
-import { guides } from "../data/guides";
+// import { guides } from "../data/guides";
+import { getGuides, type Guide } from "../services/guideService";
 
 
 
@@ -51,6 +52,7 @@ export default function HomeScreen({ navigation }: Props) {
   const { colors: COLORS, isDark } = useAppTheme();
   const styles = createStyles(COLORS, isDark);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [guides, setGuides] = useState<Guide[]>([]);
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loadingTrails, setLoadingTrails] = useState(true);
    const [myAddedTrails, setMyAddedTrails] = useState<any[]>([]);
@@ -63,6 +65,7 @@ const [totalTrails, setTotalTrails] = useState(0);
 const [addedTrails, setAddedTrails] = useState(0);
 
   const currentUser = auth.currentUser;
+  const isAdmin = currentUser?.email === "gjavadova38@gmail.com"
 
 const displayName =
   currentUser?.displayName ||
@@ -107,6 +110,19 @@ const displayName =
 
     load();
   }, []);
+
+  useEffect(() => {
+  const loadGuides = async () => {
+    try {
+      const data = await getGuides();
+      setGuides(data);
+    } catch (error) {
+      console.log("Failed to load guides:", error);
+    }
+  };
+
+  loadGuides();
+}, []);
 
   const discoverCards = useMemo(() => trails.slice(0, 3), [trails]);
 
@@ -390,7 +406,7 @@ useEffect(() => {
           </View>
 
           <View style={styles.guidesRow}>
-            {guides.slice(0, 4).map((guide) => (
+            {/* {guides.slice(0, 4).map((guide) => (
               <Pressable
                 key={guide.id}
                 style={styles.guideAvatar}
@@ -399,7 +415,7 @@ useEffect(() => {
                 }
               >
                 <Text style={styles.guideAvatarText}>
-                  {guide.name
+                  {guide.fullName
                     .split(" ")
                     .map((part) => part[0])
                     .join("")
@@ -407,7 +423,41 @@ useEffect(() => {
                     .toUpperCase()}
                 </Text>
               </Pressable>
-            ))}
+            ))} */}
+            <FlatList
+  data={guides.slice(0, 5)}
+  keyExtractor={(item) => item.id}
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={{ marginTop: 12 }}
+  renderItem={({ item }) => (
+    <Pressable
+      style={styles.guideCard}
+      onPress={() =>
+        navigation.navigate("GuideProfile", { guideId: item.id })
+      }
+    >
+      <View style={styles.guideCardAvatar}>
+        <Text style={styles.guideCardAvatarText}>
+          {item.fullName
+            .split(" ")
+            .map((p) => p[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()}
+        </Text>
+      </View>
+
+      <Text style={styles.guideCardName} numberOfLines={1}>
+        {item.fullName}
+      </Text>
+
+      <Text style={styles.guideCardRegion} numberOfLines={1}>
+        {item.region}
+      </Text>
+    </Pressable>
+  )}
+/>
           </View>
         </ScrollView>
 
@@ -430,6 +480,12 @@ useEffect(() => {
                   label: "Notifications",
                   icon: require("../../assets/notification-bell 1.png"),
                 },
+                ...(isAdmin
+  ? [
+      { label: "Admin Bookings" },
+      { label: "Admin Eco Review" },
+    ]
+  : []),
                 { label: "Log out", icon: require("../../assets/logout 1.png") },
               ].map((item) => (
                 <Pressable
@@ -441,11 +497,28 @@ useEffect(() => {
                       navigation.navigate("Settings");
                       return;
                     }
+                    if (item.label === "Notifications") {
+  setMenuOpen(false);
+  navigation.navigate("Notifications");
+  return;
+}
                       if (item.label === "Personal Profile") {
     setMenuOpen(false);
     navigation.navigate("Profile");
     return;
   }
+  
+  if (item.label === "Admin Bookings") {
+  setMenuOpen(false);
+  navigation.navigate("AdminBookings");
+  return;
+}
+
+  if (item.label === "Admin Eco Review") {
+  setMenuOpen(false);
+  navigation.navigate("AdminProofs");
+  return;
+}
 
   if (item.label === "Log out") {
     Alert.alert(
@@ -470,6 +543,7 @@ useEffect(() => {
             }
           },
         },
+        
       ]
     );
   }
@@ -730,5 +804,42 @@ addedTrailMeta: {
   marginTop: 4,
   fontSize: 10,
   color: COLORS.grayText,
+},
+guideCard: {
+  width: 110,
+  backgroundColor: COLORS.lightGray,
+  borderRadius: 16,
+  padding: 10,
+  marginRight: 10,
+  alignItems: "center",
+},
+
+guideCardAvatar: {
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  backgroundColor: COLORS.darkGreen,
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 6,
+},
+
+guideCardAvatarText: {
+  color: COLORS.white,
+  fontSize: 16,
+  fontWeight: "800",
+},
+
+guideCardName: {
+  fontSize: 12,
+  fontWeight: "700",
+  color: COLORS.black,
+  textAlign: "center",
+},
+
+guideCardRegion: {
+  fontSize: 10,
+  color: COLORS.grayText,
+  textAlign: "center",
 },
 });

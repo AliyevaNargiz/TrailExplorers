@@ -62,9 +62,13 @@ export type RootStackParamList = {
   AllTrails: undefined;
   Guides: undefined;
   GuideProfile: { guideId: string };
+  BookGuide: { guideId: string };
+  AdminBookings: undefined;
   OfflineMaps: undefined;
   MyAddedTrail: undefined;
   MyRecordedTrails: undefined;
+  Notifications: undefined;
+  AdminProofs: undefined;
   
   FriendProfile: {
     userId: string;

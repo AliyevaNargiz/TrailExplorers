@@ -16,7 +16,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCcS5IDHTW0Lk3P4-tHOw80CLOKxKHPDmU",
   authDomain: "trailexplorers-cc935.firebaseapp.com",
   projectId: "trailexplorers-cc935",
-  storageBucket: "trailexplorers-cc935.firebasestorage.app",
+  storageBucket: "trailexplorers-cc935.appspot.com",
   messagingSenderId: "286057375578",
   appId: "1:286057375578:web:c77cf6a6aacca1ac0e3563",
   measurementId: "G-YNPT9PRY4Q"
