@@ -14,6 +14,7 @@ export default {
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
+    
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.gunelllll.trailexplorers",
@@ -25,6 +26,10 @@ export default {
     android: {
       package: "com.gunelllll.trailexplorers",
       googleServicesFile: "./google-services.json",
+      adaptiveIcon: {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#EAF5EE"
+      },
       permissions: [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
+import { Image } from "react-native";
 // import { COLORS } from "../theme/colors";
 import { type ThemeColors, useAppTheme } from "../theme/colors";
 
@@ -21,11 +22,16 @@ export default function SplashScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <View style={styles.logoCircle}>
-          <View style={styles.logoLine} />
-          <View style={[styles.logoLine, styles.logoLineAlt]} />
-          <Text style={styles.logoText}>LOGO{`\n`}LOADING</Text>
-        </View>
+        
+        {/* LOGO IMAGE */}
+        <Image
+          source={require("../../assets/logo.png")} // 🔥 adjust if needed
+          style={styles.logo}
+        />
+
+        {/* OPTIONAL TEXT */}
+        <Text style={styles.loadingText}>Loading...</Text>
+
       </View>
     </SafeAreaView>
   );
@@ -66,4 +72,16 @@ StyleSheet.create({
   logoLineAlt: {
     transform: [{ rotate: "-45deg" }],
   },
+   logo: {
+      width: 180,
+      height: 180,
+      resizeMode: "contain",
+      marginBottom: 20,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: "#ffffff",
+      fontWeight: "600",
+      opacity: 0.8,
+    },
 });

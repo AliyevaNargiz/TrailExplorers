@@ -51,7 +51,7 @@ export async function saveRecordedTrailToFirestore(trail: RecordedTrail) {
     ref,
     {
       userId: user.uid,
-      title: `Trail ${new Date(trail.startedAt).toLocaleString()}`,
+      title: trail.title || "Unnamed Trail",
       startedAt: trail.startedAt,
       finishedAt: trail.finishedAt ?? Date.now(),
       durationSeconds: trail.durationSeconds,
@@ -94,6 +94,7 @@ export async function fetchRecordedTrailsForCurrentUser(): Promise<RecordedTrail
 
     return {
       id: docSnap.id,
+      title: data.title ?? "Unnamed Trail", // ✅ ADD THIS
       status:
         data.status === "recording" ||
         data.status === "paused" ||
