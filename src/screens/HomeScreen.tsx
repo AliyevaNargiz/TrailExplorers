@@ -473,7 +473,10 @@ useEffect(() => {
               </View>
 
               {[
-                { label: "Personal Profile" },
+                {
+                  label: "Personal Profile",
+                  icon: require("../../assets/icon-main.png"),
+                },
                 { label: "History", icon: require("../../assets/history.png") },
                 { label: "Settings", icon: require("../../assets/setting 1.png") },
                 {
@@ -482,8 +485,14 @@ useEffect(() => {
                 },
                 ...(isAdmin
   ? [
-      { label: "Admin Bookings" },
-      { label: "Admin Eco Review" },
+      {
+        label: "Admin Bookings",
+        icon: require("../../assets/menu.png"),
+      },
+      {
+        label: "Admin Eco Review",
+        icon: require("../../assets/icon-eco.png"),
+      },
     ]
   : []),
                 { label: "Log out", icon: require("../../assets/logout 1.png") },

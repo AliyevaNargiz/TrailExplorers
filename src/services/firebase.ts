@@ -3,15 +3,6 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-//const firebaseConfig = {
-  //apiKey: "YOUR_API_KEY",
-//  authDomain: "YOUR_PROJECT.firebaseapp.com",
- // projectId: "YOUR_PROJECT_ID",
- // storageBucket: "YOUR_PROJECT.appspot.com",
- // messagingSenderId: "XXXX",
- // appId: "XXXX",
-//};
-
 const firebaseConfig = {
   apiKey: "AIzaSyCcS5IDHTW0Lk3P4-tHOw80CLOKxKHPDmU",
   authDomain: "trailexplorers-cc935.firebaseapp.com",

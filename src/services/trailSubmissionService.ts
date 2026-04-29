@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -210,6 +211,16 @@ export async function fetchMyTrailSubmissions() {
   return snap.docs.map((doc) => {
     return mapSubmissionDoc(doc.id, doc.data());
   });
+}
+
+export async function deleteTrailSubmission(submissionId: string) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  await deleteDoc(doc(db, "trail_submissions", submissionId));
 }
 
 export async function fetchTrailSubmissionsByUserId(userId: string) {

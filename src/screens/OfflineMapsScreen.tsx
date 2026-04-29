@@ -112,6 +112,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { getOfflineMaps } from "../services/offlineMap";
+import { COLORS } from "../theme/colors";
 import type { Trail } from "../data/trails";
 import type { RootStackParamList } from "../app/navigationTypes";
 
@@ -125,18 +126,12 @@ export default function OfflineMapsScreen() {
   useEffect(() => {
     const load = async () => {
       try {
-        // const maps = await getOfflineMaps();
-        // const list = Object.values(maps).map((item) => item.trail);
-        // setTrails(list);
         const maps = await getOfflineMaps();
-        console.log("OFFLINE MAPS RAW:", maps);
+        const list = Object.values(maps)
+          .map((item) => item?.trail)
+          .filter((trail): trail is Trail => !!trail && !!trail.id);
 
-
-const list = Object.values(maps)
-  .map((item) => item?.trail)
-  .filter((trail): trail is Trail => !!trail && !!trail.id);
-
-setTrails(list);
+        setTrails(list);
       } catch (e) {
         console.log(e);
       } finally {
@@ -151,63 +146,172 @@ setTrails(list);
     return (
       <View style={styles.center}>
         <ActivityIndicator />
-        <Text>Loading saved trails...</Text>
-      </View>
-    );
-  }
-
-  if (trails.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text>No offline maps yet.</Text>
+        <Text style={styles.loadingText}>Loading offline maps...</Text>
       </View>
     );
   }
 
   return (
-    <FlatList
-      data={trails}
-      keyExtractor={(item) => String(item.id)}
-      contentContainerStyle={styles.list}
-      renderItem={({ item }) => (
-        <Pressable
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate("OfflineMap", {
-              trail: item,
-              navigationMode: true,
-            })
-          }
-        >
-          <Text style={styles.title}>{item.name}</Text>
-          <Text style={styles.subtitle}>{item.region}</Text>
-        </Pressable>
+    <View style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.screenTitle}>Offline Maps</Text>
+        <Text style={styles.screenSubtitle}>
+          Downloaded trails and maps you can use without mobile data.
+        </Text>
+      </View>
+
+      {trails.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>No offline maps yet</Text>
+          <Text style={styles.emptyText}>
+            Save a trail while online and it will appear here for offline
+            navigation.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={trails}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <Pressable
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate("OfflineMap", {
+                  trail: item,
+                  navigationMode: true,
+                })
+              }
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.title}>{item.name}</Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>Offline</Text>
+                </View>
+              </View>
+              <Text style={styles.subtitle}>{item.region}</Text>
+              <View style={styles.labelRow}>
+                <View style={styles.labelChip}>
+                  <Text style={styles.labelChipText}>Saved map</Text>
+                </View>
+                <View style={styles.labelChip}>
+                  <Text style={styles.labelChipText}>Route preview</Text>
+                </View>
+              </View>
+            </Pressable>
+          )}
+        />
       )}
-    />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    padding: 20,
+  },
+  header: {
+    marginBottom: 18,
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: COLORS.black,
+    marginBottom: 6,
+  },
+  screenSubtitle: {
+    fontSize: 14,
+    color: COLORS.grayText,
+    lineHeight: 20,
+  },
   list: {
-    padding: 16,
-    gap: 12,
+    paddingBottom: 20,
+    gap: 14,
   },
   card: {
-    backgroundColor: "#eee",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: "#F6F8FB",
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E8EDF3",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   title: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: COLORS.black,
   },
   subtitle: {
+    fontSize: 13,
+    color: COLORS.grayText,
+    marginBottom: 12,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#DDEEF7",
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#1C5DA8",
+  },
+  labelRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  labelChip: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E8EDF3",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  labelChipText: {
     fontSize: 12,
-    color: "#666",
+    fontWeight: "700",
+    color: COLORS.black,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: COLORS.grayText,
+  },
+  emptyCard: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#FAFBF9",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#E8EDF3",
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: COLORS.black,
+    marginBottom: 10,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.grayText,
+    textAlign: "center",
+    lineHeight: 20,
   },
 });

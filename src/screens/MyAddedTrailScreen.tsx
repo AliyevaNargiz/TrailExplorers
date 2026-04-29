@@ -7,10 +7,14 @@ import {
   ActivityIndicator,
   Pressable,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../app/navigationTypes";
-import { fetchMyTrailSubmissions } from "../services/trailSubmissionService";
+import {
+  fetchMyTrailSubmissions,
+  deleteTrailSubmission,
+} from "../services/trailSubmissionService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyAddedTrail">;
 
@@ -29,6 +33,7 @@ type TrailSubmissionItem = {
 export default function MyAddedTrailScreen({ navigation }: Props) {
   const [trails, setTrails] = useState<TrailSubmissionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -46,6 +51,29 @@ export default function MyAddedTrailScreen({ navigation }: Props) {
 
     load();
   }, []);
+
+  const handleDelete = (trailId: string) => {
+    Alert.alert("Delete Trail", "Are you sure you want to delete this trail?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setDeletingId(trailId);
+            await deleteTrailSubmission(trailId);
+            setTrails((prev) => prev.filter((trail) => trail.id !== trailId));
+            Alert.alert("Deleted", "Trail removed successfully.");
+          } catch (error) {
+            console.log("Failed to delete trail:", error);
+            Alert.alert("Error", "Failed to delete trail.");
+          } finally {
+            setDeletingId(null);
+          }
+        },
+      },
+    ]);
+  };
 
   const getStatusLabel = (status?: string) => {
     switch (status) {
@@ -118,6 +146,21 @@ export default function MyAddedTrailScreen({ navigation }: Props) {
           {item.description}
         </Text>
       )}
+
+      <View style={styles.actionRow}>
+        <Pressable
+          style={[
+            styles.deleteButton,
+            deletingId === item.id && styles.deleteButtonDisabled,
+          ]}
+          onPress={() => handleDelete(item.id)}
+          disabled={deletingId === item.id}
+        >
+          <Text style={styles.deleteButtonText}>
+            {deletingId === item.id ? "Deleting..." : "Delete"}
+          </Text>
+        </Pressable>
+      </View>
     </Pressable>
   );
 
@@ -284,6 +327,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     color: "#5F5F5F",
+  },
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 14,
+  },
+  deleteButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: "#E24D4D",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteButtonDisabled: {
+    backgroundColor: "#C96666",
+  },
+  deleteButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 12,
   },
   statusBadge: {
     borderRadius: 999,
