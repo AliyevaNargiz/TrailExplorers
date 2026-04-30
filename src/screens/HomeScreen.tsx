@@ -16,6 +16,7 @@ import { CompositeScreenProps } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { MainTabParamList, RootStackParamList } from "../app/navigationTypes";
 import { COLORS } from "../theme/colors";
@@ -63,6 +64,7 @@ const [loadingMyAddedTrails, setLoadingMyAddedTrails] = useState(true);
   const [totalDistance, setTotalDistance] = useState(0);
 const [totalTrails, setTotalTrails] = useState(0);
 const [addedTrails, setAddedTrails] = useState(0);
+const tabBarHeight = useBottomTabBarHeight();
 
   const currentUser = auth.currentUser;
   const isAdmin = currentUser?.email === "gjavadova38@gmail.com"
@@ -189,10 +191,17 @@ useEffect(() => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView
+        {/* <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-        >
+        > */}
+
+        <ScrollView
+  contentContainerStyle={{
+    ...styles.scrollContent,
+    paddingBottom: tabBarHeight + 20,
+  }}
+>
           <View style={styles.topBar}>
             <Pressable style={styles.burger} onPress={() => setMenuOpen(true)}>
               <Image
@@ -580,12 +589,12 @@ StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    // backgroundColor: COLORS.white,
   },
   scrollContent: {
     paddingHorizontal: 22,
     paddingTop: 10,
-    paddingBottom: 24,
+    paddingBottom: 120,
   },
   topBar: {
     flexDirection: "row",

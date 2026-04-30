@@ -86,10 +86,22 @@ export function useGoogleSignIn() {
     return user;
   };
 
+  // const logout = async () => {
+  //   await GoogleSignin.signOut();
+  //   await signOut(auth);
+  // };
+
   const logout = async () => {
+  configure();
+
+  try {
     await GoogleSignin.signOut();
-    await signOut(auth);
-  };
+  } catch (error) {
+    console.log("Google sign out skipped:", error);
+  }
+
+  await signOut(auth);
+};
 
   return { request, response: null, signIn, logout };
 }

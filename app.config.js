@@ -1,6 +1,6 @@
 export default {
   expo: {
-    name: "TrailExplorers",
+    name: "EcoTrail",
     slug: "TrailExplorers",
     owner: "gunelllll",
     scheme: "trailexplorers",

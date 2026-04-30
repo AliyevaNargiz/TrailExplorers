@@ -2,6 +2,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "../services/firebase";
 
 import SplashScreen from "../screens/SplashScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
@@ -39,20 +43,22 @@ import GuideProfileScreen from "../screens/GuideProfileScreen";
 import AdminBookingScreen from "../screens/AdminBookingScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AdminProofsScreen from "../screens/AdminProofsScreen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
-    <Tab.Navigator
+    <Tab.Navigator id = {undefined}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#e6e6e6",
-          height: 70,
-          paddingBottom: 10,
+          height: 70+ insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 10),
           paddingTop: 6,
         },
         tabBarLabelStyle: {
@@ -131,10 +137,42 @@ function MainTabs() {
   );
 }
 
-function AppNavigator() {
+// function AppNavigator() {
+//   return (
+//     <NavigationContainer>
+
+
+      // <Stack.Navigator id={undefined} screenOptions={{ headerShown: false }}>
+
+      function AppNavigator() {
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log("AUTH USER:", firebaseUser?.email);
+      setUser(firebaseUser);
+      setCheckingAuth(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (checkingAuth) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        id={undefined}
+        initialRouteName={user ? "Main" : "Welcome"}
+        screenOptions={{ headerShown: false }}
+      >
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -151,6 +189,7 @@ function AppNavigator() {
         <Stack.Screen name="TrailDetail" component={TrailDetailScreen} />
         <Stack.Screen name="OfflineMap" component={OfflineMapScreen} />
         <Stack.Screen name="RecordedTrailDetail" component={RecordedTrailDetailScreen}/>
+        
         
         <Stack.Screen name="OfflineMaps" component={OfflineMapsScreen} />
 

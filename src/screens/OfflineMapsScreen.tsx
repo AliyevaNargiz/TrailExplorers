@@ -210,7 +210,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: COLORS.white,
-    padding: 20,
+    paddingHorizontal: 20,
+  paddingTop: 55,
+  paddingBottom: 20,
   },
   header: {
     marginBottom: 18,

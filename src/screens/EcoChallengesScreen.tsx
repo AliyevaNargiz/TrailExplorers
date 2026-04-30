@@ -644,8 +644,8 @@ const createStyles = (COLORS: ThemeColors, isDark: boolean) =>
     },
     content: {
       paddingHorizontal: 20,
-      paddingTop: 18,
-      paddingBottom: 28,
+      paddingTop: 55,
+      paddingBottom: 120,
     },
     heroCard: {
       borderRadius: 28,

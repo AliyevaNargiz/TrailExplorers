@@ -325,7 +325,7 @@ const [showNameInput, setShowNameInput] = useState(false);
 
       await clearActiveRecording();
 
-      const trailId = await publishRecordedTrailToTrails(recordedTrail);
+      // const trailId = await publishRecordedTrailToTrails(recordedTrail);
 
       setIsRecording(false);
       setIsPaused(false);
