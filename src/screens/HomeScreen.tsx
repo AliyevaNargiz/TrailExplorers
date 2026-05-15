@@ -22,6 +22,10 @@ import { COLORS } from "../theme/colors";
 import { type ThemeColors, useAppTheme } from "../theme/themeContext";
 import type { Trail } from "../data/trails";
 import { fetchTrails } from "../services/trailsService";
+import { fetchMyTrailSubmissions } from "../services/trailSubmissionService";
+import { auth } from "../services/firebase";
+import { fetchRecordedTrailsForCurrentUser } from "../services/recordTrailService";
+
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, "Home">,
@@ -45,15 +49,37 @@ export default function HomeScreen({ navigation }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loadingTrails, setLoadingTrails] = useState(true);
+   const [myAddedTrails, setMyAddedTrails] = useState<any[]>([]);
+   const [recordedTrails, setRecordedTrails] = useState<any[]>([]);
+const [loadingRecordedTrails, setLoadingRecordedTrails] = useState(true);
+const [loadingMyAddedTrails, setLoadingMyAddedTrails] = useState(true);
   const { logout } = useGoogleSignIn();
+  const [totalDistance, setTotalDistance] = useState(0);
+const [totalTrails, setTotalTrails] = useState(0);
+const [addedTrails, setAddedTrails] = useState(0);
 
-  const progressItems = [
-    "2.5 km total hike completed",
-    "Completed 5 different trails",
-    "Completed 7 ECO-Challenges",
-    "Added 2 new trail for exploration",
-    "“Qobustan” trail in progress",
-  ];
+  const currentUser = auth.currentUser;
+
+const displayName =
+  currentUser?.displayName ||
+  currentUser?.email?.split("@")[0] ||
+  "Explorer";
+ 
+
+  // const progressItems = [
+  //   "2.5 km total hike completed",
+  //   "Completed 5 different trails",
+  //   "Completed 7 ECO-Challenges",
+  //   "Added 2 new trail for exploration",
+  //   "“Qobustan” trail in progress",
+  // ];
+
+   const progressItems = [
+  `${totalDistance.toFixed(1)} km total hike completed`,
+  `Completed ${totalTrails} different trails`,
+  "Completed 0 ECO-Challenges",
+  `Added ${addedTrails} new trails for exploration`,
+];
 
   const rootNavigation =
   navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
@@ -78,8 +104,67 @@ export default function HomeScreen({ navigation }: Props) {
     load();
   }, []);
 
-  // show only first 3 trails in the Home section
   const discoverCards = useMemo(() => trails.slice(0, 3), [trails]);
+
+  const loadProgress = async () => {
+  try {
+    const submissions = await fetchMyTrailSubmissions();
+
+    setAddedTrails(submissions.length);
+
+    const totalKm = submissions.reduce(
+      (sum, item) => sum + (Number(item.distanceKm) || 0),
+      0
+    );
+
+    setTotalDistance(totalKm);
+    setTotalTrails(submissions.length);
+  } catch (error) {
+    console.log("Progress load error:", error);
+  }
+};
+
+useEffect(() => {
+  loadProgress();
+}, []);
+
+useEffect(() => {
+  const loadMyAddedTrails = async () => {
+    try {
+      setLoadingMyAddedTrails(true);
+      const data = await fetchMyTrailSubmissions();
+      setMyAddedTrails(data);
+    } catch (error) {
+      console.log("Failed to load added trails:", error);
+      setMyAddedTrails([]);
+    } finally {
+      setLoadingMyAddedTrails(false);
+    }
+  };
+
+  loadMyAddedTrails();
+}, []);
+
+useEffect(() => {
+  const loadRecordedTrails = async () => {
+    try {
+      setLoadingRecordedTrails(true);
+      const data = await fetchRecordedTrailsForCurrentUser();
+      setRecordedTrails(data);
+    } catch (error) {
+      console.log("Failed to load recorded trails:", error);
+      setRecordedTrails([]);
+    } finally {
+      setLoadingRecordedTrails(false);
+    }
+  };
+
+  loadRecordedTrails();
+}, []);
+
+  // show only first 3 trails in the Home section
+  // const discoverCards = useMemo(() => trails.slice(0, 3), [trails]);
+  const addedTrailCards = useMemo(() => myAddedTrails.slice(0, 3), [myAddedTrails]);
 
 //   return (
 //     <SafeAreaView style={styles.safeArea}>
@@ -438,7 +523,7 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
           </View>
 
-          <Text style={styles.title}>HEY NARA!</Text>
+          <Text style={styles.title}>HEY {displayName.toUpperCase()}!</Text>
           <Text style={styles.subtitle}>
             Are you ready for your next adventure?
           </Text>
@@ -463,7 +548,7 @@ export default function HomeScreen({ navigation }: Props) {
               </Text>
             </View>
 
-            <Pressable onPress={() => navigation.navigate("Maps")}>
+            <Pressable onPress={() => navigation.navigate("AllTrails")}>
               <Text style={styles.viewAll}>view all</Text>
             </Pressable>
           </View>
@@ -508,6 +593,106 @@ export default function HomeScreen({ navigation }: Props) {
             />
           )}
 
+     <View style={styles.sectionHeader}>
+  <View style={styles.sectionTextWrap}>
+    <Text style={styles.sectionTitle}>RECORDED TRAILS</Text>
+    <Text style={styles.sectionSubtitle}>
+      Trails you recorded while hiking
+    </Text>
+    
+  </View>
+   <Pressable onPress={() => navigation.navigate("MyRecordedTrails")}>
+    <Text style={styles.viewAll}>view all</Text>
+  </Pressable>
+</View>
+
+{loadingRecordedTrails ? (
+  <View style={styles.loaderWrap}>
+    <ActivityIndicator />
+  </View>
+) : (
+  <FlatList
+    data={recordedTrails.slice(0, 3)}
+    keyExtractor={(item) => item.id}
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.trailList}
+    renderItem={({ item }) => (
+      <Pressable
+        style={styles.addedTrailCard}
+        onPress={() =>
+          navigation.navigate("RecordedTrailDetail", {
+            trail: item,
+          })
+        }
+      >
+        <Text style={styles.addedTrailStatus}>Recorded</Text>
+
+        <Text style={styles.addedTrailTitle}>
+          {item.title || "Unnamed Trail"}
+        </Text>
+
+        <Text style={styles.addedTrailMeta}>
+          {new Date(item.startedAt).toLocaleDateString()}
+        </Text>
+
+        <Text style={styles.addedTrailMeta}>
+          {(item.distanceMeters / 1000).toFixed(2)} km
+        </Text>
+      </Pressable>
+    )}
+    ListEmptyComponent={
+      <Text style={styles.emptyText}>No recorded trails yet.</Text>
+    }
+  />
+)}     
+
+         <View style={styles.sectionHeader}>
+  <View style={styles.sectionTextWrap}>
+    <Text style={styles.sectionTitle}>YOUR ADDED TRAILS</Text>
+    <Text style={styles.sectionSubtitle}>
+      Trails you submitted from Add New Trail
+    </Text>
+  </View>
+
+  <Pressable onPress={() => navigation.navigate("MyAddedTrail")}>
+    <Text style={styles.viewAll}>view all</Text>
+  </Pressable>
+</View>
+
+{loadingMyAddedTrails ? (
+  <View style={styles.loaderWrap}>
+    <ActivityIndicator />
+  </View>
+) : (
+  <FlatList
+    data={addedTrailCards}
+    keyExtractor={(item) => item.id}
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.trailList}
+    renderItem={({ item }) => (
+      <View style={styles.addedTrailCard}>
+        <Text style={styles.addedTrailStatus}>
+          {item.status === "pending_ai" ? "Pending" : item.status}
+        </Text>
+
+        <Text style={styles.addedTrailTitle}>{item.name}</Text>
+
+        <Text style={styles.addedTrailMeta}>
+          {item.region} • {item.difficulty}
+        </Text>
+
+        <Text style={styles.addedTrailMeta}>
+          {item.distanceKm} km • {item.durationHours} h
+        </Text>
+      </View>
+    )}
+    ListEmptyComponent={
+      <Text style={styles.emptyText}>No added trails yet.</Text>
+    }
+  />
+)}
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTextWrap}>
               <Text style={styles.sectionTitle}>MEET PROFESSIONAL GUIDES</Text>
@@ -810,4 +995,36 @@ StyleSheet.create({
     height: 16,
     resizeMode: "contain",
   },
+  addedTrailCard: {
+  width: 170,
+  minHeight: 110,
+  borderRadius: 14,
+  backgroundColor: COLORS.lightGray,
+  padding: 12,
+  justifyContent: "space-between",
+},
+
+addedTrailStatus: {
+  alignSelf: "flex-start",
+  fontSize: 9,
+  fontWeight: "700",
+  color: COLORS.white,
+  backgroundColor: COLORS.green,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 10,
+},
+
+addedTrailTitle: {
+  marginTop: 10,
+  fontSize: 12,
+  fontWeight: "700",
+  color: COLORS.black,
+},
+
+addedTrailMeta: {
+  marginTop: 4,
+  fontSize: 10,
+  color: COLORS.grayText,
+},
 });

@@ -6,14 +6,15 @@ export default {
     scheme: "trailexplorers",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/logo.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
-      image: "./assets/splash-icon.png",
+      image: "./assets/logo.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
+    
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.gunelllll.trailexplorers",
@@ -25,9 +26,16 @@ export default {
     android: {
       package: "com.gunelllll.trailexplorers",
       googleServicesFile: "./google-services.json",
+      adaptiveIcon: {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#EAF5EE"
+      },
       permissions: [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
       ],
       config: {
         googleMaps: {
@@ -36,7 +44,7 @@ export default {
       },
     },
     web: {
-      favicon: "./assets/favicon.png",
+      favicon: "./assets/logo.png",
     },
     extra: {
       eas: {
