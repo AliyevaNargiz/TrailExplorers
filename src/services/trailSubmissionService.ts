@@ -11,8 +11,9 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, storage  } from "./firebase";
+import * as FileSystem from "expo-file-system/legacy";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
+import { auth } from "./firebase";
 
 // type SubmissionPayload = {
 //   name: string;
@@ -62,6 +63,7 @@ export type PublicTrailSubmissionItem = {
   elevationGain: number;
   features: string[];
   mediaUrls: string[];
+  waypointNotes?: string;
   createdAt: any;
   averageRating: number;
   reviewCount: number;
@@ -145,23 +147,120 @@ function mapReviewDoc(id: string, data: Record<string, any>): PublicTrailReview 
   };
 }
 
+// export async function uploadTrailImageAsync(uri: string) {
+//   const user = auth.currentUser;
+
+//   if (!user) {
+//     throw new Error("User not authenticated");
+//   }
+
+//   const response = await fetch(uri);
+//   const blob = await response.blob();
+
+//   const filename = `trail-submissions/${user.uid}/${Date.now()}.jpg`;
+//   const storageRef = ref(storage, filename);
+
+//   await uploadBytes(storageRef, blob);
+//   const downloadURL = await getDownloadURL(storageRef);
+
+//   return downloadURL;
+// }
+
+// export async function uploadTrailImageAsync(uri: string) {
+//   const user = auth.currentUser;
+
+//   if (!user) {
+//     throw new Error("User not authenticated");
+//   }
+
+//  const base64 = await FileSystem.readAsStringAsync(uri, {
+//   encoding: "base64",
+// });
+
+//   const filename = `trail-submissions/${user.uid}/${Date.now()}.jpg`;
+//   const storageRef = ref(storage, filename);
+
+//   await uploadString(storageRef, base64, "base64", {
+//     contentType: "image/jpeg",
+//   });
+
+//   const downloadURL = await getDownloadURL(storageRef);
+//   return downloadURL;
+// }
+
+// export async function uploadTrailImageAsync(uri: string) {
+//   const user = auth.currentUser;
+
+//   if (!user) {
+//     throw new Error("User not authenticated");
+//   }
+//  const token = await user.getIdToken();
+
+//   const fileName = `trail-submissions/${user.uid}/${Date.now()}.jpg`;
+
+//   const uploadUrl =
+//     `https://firebasestorage.googleapis.com/v0/b/trailexplorers-cc935.appspot.com/o` +
+//     `?uploadType=media&name=${encodeURIComponent(fileName)}`;
+
+//   const result = await FileSystem.uploadAsync(uploadUrl, uri, {
+//     httpMethod: "POST",
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       "Content-Type": "image/jpeg",
+//     },
+//     uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+//   });
+
+//   if (result.status < 200 || result.status >= 300) {
+//     console.log("Storage upload response:", result.body);
+//     throw new Error("Image upload failed");
+//   }
+
+//   return `https://firebasestorage.googleapis.com/v0/b/trailexplorers-cc935.appspot.com/o/${encodeURIComponent(
+//     fileName
+//   )}?alt=media`;
+// }
+
 export async function uploadTrailImageAsync(uri: string) {
   const user = auth.currentUser;
 
   if (!user) {
-    throw new Error("User not authenticated");
+    throw new Error("User not logged in");
   }
 
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  const token = await user.getIdToken();
 
-  const filename = `trail-submissions/${user.uid}/${Date.now()}.jpg`;
-  const storageRef = ref(storage, filename);
+  const filePath = `trail-submissions/${user.uid}/${Date.now()}.jpg`;
 
-  await uploadBytes(storageRef, blob);
-  const downloadURL = await getDownloadURL(storageRef);
+  const uploadUrl =
+    `https://firebasestorage.googleapis.com/v0/b/trailexplorers-cc935.firebasestorage.app/o` +
+    `?uploadType=media&name=${encodeURIComponent(filePath)}`;
 
-  return downloadURL;
+  const result = await FileSystem.uploadAsync(uploadUrl, uri, {
+    httpMethod: "POST",
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "image/jpeg",
+    },
+  });
+
+  if (result.status !== 200) {
+    console.log("UPLOAD RESULT:", result);
+    throw new Error("Upload failed");
+  }
+
+  const uploadedFile = JSON.parse(result.body);
+
+  if (!uploadedFile.name) {
+    throw new Error("Upload did not return a file name");
+  }
+
+  const downloadUrl =
+    `https://firebasestorage.googleapis.com/v0/b/trailexplorers-cc935.firebasestorage.app/o/` +
+    `${encodeURIComponent(uploadedFile.name)}?alt=media&token=${uploadedFile.downloadTokens}`;
+
+  return downloadUrl;
 }
 
 export async function submitTrailSubmission(payload: SubmissionPayload) {

@@ -14,24 +14,13 @@ import { RootStackParamList } from "../app/navigationTypes";
 import {
   fetchMyTrailSubmissions,
   deleteTrailSubmission,
+  PublicTrailSubmissionItem,
 } from "../services/trailSubmissionService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyAddedTrail">;
 
-type TrailSubmissionItem = {
-  id: string;
-  name: string;
-  description?: string;
-  region?: string;
-  village?: string;
-  difficulty?: string;
-  status?: string;
-  distanceKm?: number;
-  durationHours?: number;
-};
-
 export default function MyAddedTrailScreen({ navigation }: Props) {
-  const [trails, setTrails] = useState<TrailSubmissionItem[]>([]);
+  const [trails, setTrails] = useState<PublicTrailSubmissionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -104,8 +93,9 @@ export default function MyAddedTrailScreen({ navigation }: Props) {
     }
   };
 
-  const renderItem = ({ item }: { item: TrailSubmissionItem }) => (
-    <Pressable style={styles.card}>
+  const renderItem = ({ item }: { item: PublicTrailSubmissionItem }) => (
+    <Pressable style={styles.card} onPress={() => navigation.navigate("MyAddedTrailDetail", { trail: item })}
+>
       <View style={styles.cardTopRow}>
         <Text style={styles.title} numberOfLines={1}>
           {item.name || "Untitled Trail"}

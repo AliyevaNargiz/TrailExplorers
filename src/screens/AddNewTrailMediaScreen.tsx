@@ -376,7 +376,7 @@ const routeFromRecording = mappedRecording?.route ?? [];
       const payload = {
   ...draft,
   waypointNotes: waypointNotes.trim(),
-  mediaUrls: [],
+  mediaUrls: mediaUrls,
   route: routeFromRecording,
   routeStats: {
     distanceKm: Number(distanceKm) || 0,

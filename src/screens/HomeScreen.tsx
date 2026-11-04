@@ -502,6 +502,10 @@ useEffect(() => {
         label: "Admin Eco Review",
         icon: require("../../assets/icon-eco.png"),
       },
+      {
+        label: "Admin Trail Reviews", 
+        icon: require("../../assets/icon-eco.png"), 
+      },
     ]
   : []),
                 { label: "Log out", icon: require("../../assets/logout 1.png") },
@@ -535,6 +539,12 @@ useEffect(() => {
   if (item.label === "Admin Eco Review") {
   setMenuOpen(false);
   navigation.navigate("AdminProofs");
+  return;
+}
+
+if (item.label === "Admin Trail Reviews") {
+  setMenuOpen(false);
+  navigation.navigate("AdminTrailReviews");
   return;
 }
 

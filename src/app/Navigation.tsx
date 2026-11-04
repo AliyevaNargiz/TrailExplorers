@@ -32,6 +32,7 @@ import AddNewTrailBasicScreen from "../screens/AddNewTrailBasicScreen";
 import AddNewTrailMediaScreen from "../screens/AddNewTrailMediaScreen";
 import RecordTrailScreen from "../screens/RecordTrailScreen";
 import TrailSubmissionScreen from "../screens/TrailSubmissionScreen";
+import MyAddedTrailDetailScreen from "../screens/MyAddedTrailDetailScreen";
 import OfflineMapsScreen from "../screens/OfflineMapsScreen";
 import MyAddedTrailScreen from "../screens/MyAddedTrailScreen";
 import RecordedTrailDetailScreen from "../screens/RecordedTrailDetailScreen";
@@ -43,6 +44,7 @@ import GuideProfileScreen from "../screens/GuideProfileScreen";
 import AdminBookingScreen from "../screens/AdminBookingScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AdminProofsScreen from "../screens/AdminProofsScreen";
+import AdminTrailReviewsScreen from "../screens/AdminTrailReviewsScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -198,10 +200,7 @@ function MainTabs() {
         <Stack.Screen name="RecordTrail" component={RecordTrailScreen} />
         <Stack.Screen name="TrailSubmission" component={TrailSubmissionScreen} />
         <Stack.Screen name="MyAddedTrail" component={MyAddedTrailScreen} />
-        <Stack.Screen
-  name="MyRecordedTrails"
-  component={MyRecordedTrailsScreen}
-/>
+        <Stack.Screen name="MyRecordedTrails" component={MyRecordedTrailsScreen}/>
         <Stack.Screen name="FriendProfile" component={FriendsProfileScreen} />
         <Stack.Screen name="Guides" component={GuidesScreen} />
         <Stack.Screen name="GuideProfile" component={GuideProfileScreen} />
@@ -209,6 +208,8 @@ function MainTabs() {
         <Stack.Screen name="AdminBookings" component={AdminBookingScreen} />
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="AdminProofs" component={AdminProofsScreen} />
+        <Stack.Screen name="MyAddedTrailDetail" component={MyAddedTrailDetailScreen} />
+        <Stack.Screen name="AdminTrailReviews" component={AdminTrailReviewsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

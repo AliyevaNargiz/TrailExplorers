@@ -67,6 +67,7 @@ export type RootStackParamList = {
   OfflineMaps: undefined;
   MyAddedTrail: undefined;
   MyRecordedTrails: undefined;
+  
   Notifications: undefined;
   AdminProofs: undefined;
   
@@ -101,11 +102,15 @@ export type RootStackParamList = {
   };
 
   RecordTrail: undefined;
+  AdminTrailReviews: undefined;
 
   TrailSubmission: {
     submissionId?: string;
     recordedTrail?: RecordedTrail;
   };
+  MyAddedTrailDetail: {
+  trail: any;
+};
 };
 
 export type MainTabParamList = {
