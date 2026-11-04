@@ -26,8 +26,14 @@ export async function clearActiveRecording(): Promise<void> {
 export async function savePendingSubmission(recording: RecordedTrail): Promise<void> {
   const raw = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
   const current: RecordedTrail[] = raw ? JSON.parse(raw) : [];
-  current.push(recording);
-  await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(current));
+  // current.push(recording);
+  // await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(current));
+    const exists = current.some((item) => item.id === recording.id);
+  const next = exists
+    ? current.map((item) => (item.id === recording.id ? recording : item))
+    : [...current, recording];
+
+  await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(next));
 }
 
 export async function getPendingSubmissions(): Promise<RecordedTrail[]> {
@@ -39,4 +45,11 @@ export async function getPendingSubmissions(): Promise<RecordedTrail[]> {
   } catch {
     return [];
   }
+}
+
+export async function removePendingSubmission(recordingId: string): Promise<void> {
+  const raw = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
+  const current: RecordedTrail[] = raw ? JSON.parse(raw) : [];
+  const next = current.filter((item) => item.id !== recordingId);
+  await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(next));
 }

@@ -469,7 +469,7 @@
 //     },
 //   });
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -485,11 +485,19 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RootStackParamList } from "../app/navigationTypes";
 import { type ThemeColors, useAppTheme } from "../theme/themeContext";
+import { getPendingSubmissions } from "../services/trailRecordingStorage";
+import { fetchRecordedTrailsForCurrentUser } from "../services/recordTrailService";
+import type { RecordedTrail } from "../app/navigationTypes";
+import {
+  formatRecordedTrailDistance,
+  formatRecordedTrailDuration,
+  formatRecordedTrailTitle,
+} from "../services/trailRecordingFormatters";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddNewTrailBasic">;
 type Difficulty = "Extra Easy" | "Easy" | "Medium" | "Medium Hard" | "Hard" | "Extra Hard" | "";
 
-export default function AddNewTrailBasicScreen({ navigation }: Props) {
+export default function AddNewTrailBasicScreen({ navigation, route }: Props) {
   const { colors: COLORS } = useAppTheme();
   const styles = createStyles(COLORS);
 
@@ -502,7 +510,12 @@ export default function AddNewTrailBasicScreen({ navigation }: Props) {
 
   const [showCities, setShowCities] = useState(false);
 
-const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı"];
+  const [recordedTrails, setRecordedTrails] = useState<RecordedTrail[]>([]);
+  const [showRecordedTrails, setShowRecordedTrails] = useState(false);
+  const [selectedRecordedTrail, setSelectedRecordedTrail] =
+    useState<RecordedTrail | null>(route.params?.recordedTrail ?? null);
+
+const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı","Bakı"];
 
   const difficulties: Exclude<Difficulty, "">[] = [
     "Extra Easy",
@@ -512,6 +525,45 @@ const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı"];
     "Hard",
     "Extra Hard",
   ];
+
+  // useEffect(() => {
+  //   async function loadRecordedTrails() {
+  //     try {
+  //       const trails = await getPendingSubmissions();
+  //       setRecordedTrails(trails);
+  //     } catch (error) {
+  //       console.log("Failed to load recorded trails:", error);
+  //     }
+  //   }
+
+  //   loadRecordedTrails();
+  // }, []);
+
+  useEffect(() => {
+  async function loadRecordedTrails() {
+    try {
+      const remoteTrails = await fetchRecordedTrailsForCurrentUser();
+      const pendingTrails = await getPendingSubmissions();
+
+      const merged = [...remoteTrails];
+
+      for (const pending of pendingTrails) {
+        const exists = merged.some((item) => item.id === pending.id);
+        if (!exists) {
+          merged.push(pending);
+        }
+      }
+
+      merged.sort((a, b) => b.startedAt - a.startedAt);
+
+      setRecordedTrails(merged);
+    } catch (error) {
+      console.log("Failed to load recorded trails:", error);
+    }
+  }
+
+  loadRecordedTrails();
+}, []);
 
   const handleNext = () => {
     if (
@@ -537,10 +589,11 @@ const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı"];
           .map((item) => item.trim())
           .filter(Boolean),
       },
+      recordedTrail: selectedRecordedTrail,
     });
   };
 
-  return (
+return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboard}
@@ -593,36 +646,36 @@ const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı"];
             </View>
 
             <View style={styles.fieldHalf}>
-  <Text style={styles.label}>Add Location*</Text>
+              <Text style={styles.label}>Add Location*</Text>
 
-  <Pressable
-    style={styles.selectInput}
-    onPress={() => setShowCities(!showCities)}
-  >
-    <Text style={styles.selectChevron}>⌄</Text>
-    <Text style={region ? styles.selectValue : styles.selectPlaceholder}>
-      {region || "Choose the city"}
-    </Text>
-  </Pressable>
+              <Pressable
+                style={styles.selectInput}
+                onPress={() => setShowCities(!showCities)}
+              >
+                <Text style={styles.selectChevron}>⌄</Text>
+                <Text style={region ? styles.selectValue : styles.selectPlaceholder}>
+                  {region || "Choose the city"}
+                </Text>
+              </Pressable>
 
-  {showCities && (
-    <View style={styles.dropdown}>
-      {cities.map((city) => (
-        <Pressable
-          key={city}
-          style={styles.dropdownItem}
-          onPress={() => {
-            setRegion(city);
-            setShowCities(false);
-          }}
-        >
-          <Text style={styles.dropdownText}>{city}</Text>
-        </Pressable>
-      ))}
-    </View>
-  )}
+              {showCities && (
+                <View style={styles.dropdown}>
+                  {cities.map((city) => (
+                    <Pressable
+                      key={city}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setRegion(city);
+                        setShowCities(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownText}>{city}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
 
-              <View style={styles.fieldHalf}>
+              <View style={styles.fieldHalfInner}>
                 <Text style={styles.label}>Add Village*</Text>
                 <TextInput
                   style={styles.input}
@@ -645,7 +698,12 @@ const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı"];
                     style={styles.difficultyItem}
                     onPress={() => setDifficulty(item)}
                   >
-                    <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
+                    <View
+                      style={[
+                        styles.radioOuter,
+                        selected && styles.radioOuterSelected,
+                      ]}
+                    >
                       {selected ? <View style={styles.radioInner} /> : null}
                     </View>
                     <Text style={styles.difficultyText}>{item}</Text>
@@ -666,13 +724,77 @@ const cities = ["Quba", "Qəbələ", "Gəncə", "İsmayıllı"];
               />
             </View>
 
+            <Text style={styles.label}>Recorded Trail</Text>
+
+            <Pressable
+              style={styles.selectInputFull}
+              onPress={() => setShowRecordedTrails((prev) => !prev)}
+            >
+              <Text style={styles.selectChevron}>⌄</Text>
+              <Text
+                style={
+                  selectedRecordedTrail
+                    ? styles.selectValue
+                    : styles.selectPlaceholder
+                }
+              >
+                {selectedRecordedTrail
+                  ? formatRecordedTrailTitle(selectedRecordedTrail)
+                  : "Choose a recorded trail"}
+              </Text>
+            </Pressable>
+
+            {selectedRecordedTrail ? (
+              <View style={styles.recordedTrailCard}>
+                <Text style={styles.recordedTrailTitle}>
+                  {formatRecordedTrailTitle(selectedRecordedTrail)}
+                </Text>
+                <Text style={styles.recordedTrailMeta}>
+                  Distance: {formatRecordedTrailDistance(selectedRecordedTrail)}
+                </Text>
+                <Text style={styles.recordedTrailMeta}>
+                  Duration: {formatRecordedTrailDuration(selectedRecordedTrail)}
+                </Text>
+                <Text style={styles.recordedTrailMeta}>
+                  Points: {selectedRecordedTrail.coordinates?.length ?? 0}
+                </Text>
+              </View>
+            ) : null}
+
+            {showRecordedTrails && (
+              <View style={styles.dropdown}>
+                {recordedTrails.length === 0 ? (
+                  <Text style={styles.emptyRecordedText}>
+                    No recorded trails found.
+                  </Text>
+                ) : (
+                  recordedTrails.map((trail) => (
+                    <Pressable
+                      key={trail.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setSelectedRecordedTrail(trail);
+                        setShowRecordedTrails(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownText}>
+                        {formatRecordedTrailTitle(trail)}
+                      </Text>
+                      <Text style={styles.recordedTrailMeta}>
+                        {formatRecordedTrailDistance(trail)} •{" "}
+                        {formatRecordedTrailDuration(trail)}
+                      </Text>
+                    </Pressable>
+                  ))
+                )}
+              </View>
+            )}
+
             <Pressable style={styles.nextButton} onPress={handleNext}>
               <Text style={styles.nextButtonText}>Next</Text>
             </Pressable>
           </ScrollView>
-
-          
-          </View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -748,11 +870,16 @@ const createStyles = (_COLORS: ThemeColors) =>
     fieldHalf: {
       flex: 1,
     },
+    fieldHalfInner: {
+      flex: 1,
+      marginTop: 12,
+    },
     label: {
       fontSize: 11,
       fontWeight: "700",
       color: "#232323",
       marginBottom: 6,
+      marginTop: 14,
     },
     input: {
       height: 44,
@@ -863,56 +990,51 @@ const createStyles = (_COLORS: ThemeColors) =>
       fontSize: 12,
       fontWeight: "700",
     },
-    bottomTabBar: {
-      borderTopWidth: 1,
-      borderTopColor: "#D9D9D9",
-      backgroundColor: "#F7F7F4",
-      paddingTop: 10,
-      paddingBottom: 12,
-      paddingHorizontal: 10,
-      flexDirection: "row",
-      justifyContent: "space-around",
-      alignItems: "flex-end",
+    selectValue: {
+      fontSize: 11,
+      color: "#222222",
     },
-    tabItem: {
-      alignItems: "center",
-      justifyContent: "center",
-      minWidth: 62,
+    dropdown: {
+      marginTop: 6,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#D9D9D9",
+      overflow: "hidden",
     },
-    tabIcon: {
-      fontSize: 24,
-      color: "#111111",
+    dropdownItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#EEEEEE",
+    },
+    dropdownText: {
+      fontSize: 12,
+      color: "#222222",
+    },
+    recordedTrailCard: {
+      marginTop: 10,
+      backgroundColor: "#ECEFEC",
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: "#D9E5D9",
+    },
+    recordedTrailTitle: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: "#1F1F1F",
+      marginBottom: 6,
+    },
+    recordedTrailMeta: {
+      fontSize: 11,
+      color: "#5F5F5F",
       marginBottom: 2,
     },
-    tabLabel: {
-      fontSize: 9,
-      color: "#2F2F2F",
-      textAlign: "center",
+    emptyRecordedText: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 11,
+      color: "#888888",
     },
-
-    selectValue: {
-  fontSize: 11,
-  color: "#222222",
-},
-
-dropdown: {
-  marginTop: 6,
-  backgroundColor: "#FFFFFF",
-  borderRadius: 8,
-  borderWidth: 1,
-  borderColor: "#D9D9D9",
-  overflow: "hidden",
-},
-
-dropdownItem: {
-  paddingVertical: 10,
-  paddingHorizontal: 12,
-  borderBottomWidth: 1,
-  borderBottomColor: "#EEEEEE",
-},
-
-dropdownText: {
-  fontSize: 12,
-  color: "#222222",
-},
   });

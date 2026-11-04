@@ -732,6 +732,7 @@ import { RootStackParamList } from "../app/navigationTypes";
 import { type ThemeColors, useAppTheme } from "../theme/colors";
 import type { Trail } from "../data/trails";
 import { getOfflineTrail } from "../services/offlineMap";
+import { scheduleEcoChallengeReminder } from "../services/notificationService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "OfflineMap">;
 
@@ -784,6 +785,10 @@ export default function OfflineMapScreen({ route, navigation }: Props) {
   const navigationMode = route.params?.navigationMode ?? false;
   const trailId = routeTrail?.id;
 
+  useEffect(() => {
+    scheduleEcoChallengeReminder();
+  }, [navigationMode]);
+
   const mapRef = useRef<MapView | null>(null);
 
   const [trail, setTrail] = useState<Trail | null>(routeTrail ?? null);
@@ -832,6 +837,8 @@ export default function OfflineMapScreen({ route, navigation }: Props) {
 
     loadOfflineTrail();
   }, [routeTrail, trailId, navigation]);
+  
+
 
   const initialRegion: Region | undefined = useMemo(() => {
     if (!trail) return undefined;

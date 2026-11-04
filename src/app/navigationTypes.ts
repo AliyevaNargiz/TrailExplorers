@@ -20,6 +20,7 @@ export type LocationPoint = {
 
 export type RecordedTrail = {
   id: string;
+  title?: string;
   status: "recording" | "paused" | "finished";
   startedAt: number;
   finishedAt?: number;
@@ -55,25 +56,61 @@ export type RootStackParamList = {
   PrivacyPolicy: undefined;
   TermsOfUse: undefined;
   TrailDetail: { id: string };
+  RecordedTrailDetail: {
+  trail: RecordedTrail;
+};
   AllTrails: undefined;
+  Guides: undefined;
+  GuideProfile: { guideId: string };
+  BookGuide: { guideId: string };
+  AdminBookings: undefined;
   OfflineMaps: undefined;
+  MyAddedTrail: undefined;
+  MyRecordedTrails: undefined;
+  
+  Notifications: undefined;
+  AdminProofs: undefined;
+  
+  FriendProfile: {
+    userId: string;
+    fallbackName?: string;
+    fallbackEmail?: string;
+    fallbackPhotoURL?: string;
+    fallbackHomeRegion?: string;
+    fallbackBio?: string;
+  };
 
   OfflineMap: {
     trail: Trail;
     navigationMode?: boolean;
   };
 
-  AddNewTrailBasic: undefined;
+  // AddNewTrailBasic: undefined;
+  // AddNewTrailMedia: {
+  //   draft: NewTrailDraft;
+  // };
+  
+  AddNewTrailBasic:
+    | {
+        recordedTrail?: RecordedTrail | null;
+      }
+    | undefined;
+
   AddNewTrailMedia: {
     draft: NewTrailDraft;
+    recordedTrail?: RecordedTrail | null;
   };
 
   RecordTrail: undefined;
+  AdminTrailReviews: undefined;
 
   TrailSubmission: {
     submissionId?: string;
     recordedTrail?: RecordedTrail;
   };
+  MyAddedTrailDetail: {
+  trail: any;
+};
 };
 
 export type MainTabParamList = {
